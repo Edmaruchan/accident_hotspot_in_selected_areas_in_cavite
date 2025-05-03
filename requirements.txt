@@ -3,3 +3,4 @@ folium
 streamlit-folium
 plotly
 pandas
+scikit-learn
