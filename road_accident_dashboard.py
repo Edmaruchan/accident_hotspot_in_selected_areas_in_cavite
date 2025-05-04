@@ -89,15 +89,15 @@ st.title("Spatio-Temporal Road Accident Clustering")
 df = pd.read_csv("data/ALL.csv")
 
 # Show plot only if button clicked
-if st.button("Run Clustering"):
+#if st.button("Run Clustering"):
     
 
 # Right Panel – QGIS Map Images
- st.subheader("QGIS Road Accident Hotspot Maps")
+st.subheader("QGIS Road Accident Hotspot Maps")
 
 col1, col2 = st.columns(2)
 with col1:
-    st.image("qgis_maps/gma_map.png", caption="GMA")
-    st.image("qgis_maps/carmona_map.png", caption="Carmona")
+    st.image("data/qgis_maps/image.png", caption="GMA")
+    st.image("data/qgis_maps/image.png", caption="Carmona")
 with col2:
-    st.image("qgis_maps/alfonso_map.png", caption="Alfonso")
+    st.image("data/qgis_maps/image.png", caption="Alfonso")
