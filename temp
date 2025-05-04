@@ -1,0 +1,83 @@
+import streamlit as st
+import pandas as pd
+import numpy as np
+from sklearn.cluster import DBSCAN
+import matplotlib.pyplot as plt
+from sklearn.cluster import KMeans
+
+st.button("DBSCAN CLUSTERING")
+
+
+# Example: CSV with 'latitude' and 'longitude' columns
+df = pd.read_csv("data/ALL.csv")
+
+# Convert to radians for haversine
+coords = np.radians(df[['Latitude', 'Longitude']].values)
+
+# Define epsilon in radians (e.g., 300 meters ≈ 0.003 rad)
+eps_rad = 0.3 / 6371.0
+min_samples = 3
+
+# Run DBSCAN
+db = DBSCAN(eps=eps_rad, min_samples=3, metric='haversine')
+df['cluster'] = db.fit_predict(coords)
+
+# Check cluster counts
+st.write(f"Cluster Counts: {df['cluster'].value_counts()}")
+
+# Optional: Plot results using Streamlit's st.pyplot() instead of plt.show()
+fig, ax = plt.subplots(figsize=(8, 6))
+scatter = ax.scatter(df['Longitude'], df['Latitude'], c=df['cluster'], cmap='tab20', s=10)
+ax.set_title("DBSCAN Clustering of Road Accidents")
+ax.set_xlabel("Longitude")
+ax.set_ylabel("Latitude")
+ax.grid(True)
+
+# Show plot in Streamlit
+st.pyplot(fig)
+
+# Load your dataset
+df = pd.read_csv("data/ALL.csv")  # Adjust the file path as needed
+
+# Show the first few rows of your data
+st.write("Dataset preview:", df.head())
+
+# Extract latitude and longitude
+coords = df[['Latitude', 'Longitude']].values
+
+# Number of clusters (you can make this dynamic using Streamlit sliders)
+k = st.slider("Number of Clusters", min_value=1, max_value=10, value=3)
+
+# Apply K-means clustering
+kmeans = KMeans(n_clusters=k, random_state=42)
+df['cluster'] = kmeans.fit_predict(coords)
+
+# Show the number of data points in each cluster
+st.write("Cluster Counts:", df['cluster'].value_counts())
+
+# Create a plot of the clusters
+fig, ax = plt.subplots(figsize=(8, 6))
+scatter = ax.scatter(df['Longitude'], df['Latitude'], c=df['cluster'], cmap='viridis', s=50)
+ax.set_title("K-means Clustering of Road Accidents")
+ax.set_xlabel("Longitude")
+ax.set_ylabel("Latitude")
+plt.grid(True)
+
+# Show the plot in Streamlit
+st.pyplot(fig)
+
+# Get the cluster centers
+centers = kmeans.cluster_centers_
+
+# Plot the clusters with centroids
+fig, ax = plt.subplots(figsize=(8, 6))
+scatter = ax.scatter(df['Longitude'], df['Latitude'], c=df['cluster'], cmap='tab10', s=10)
+ax.scatter(centers[:, 1], centers[:, 0], c='black', marker='x', s=100, label='Centroids')
+ax.set_title(f"K-Means Clustering (k={k}) with Centroids")
+ax.legend()
+ax.set_xlabel("Longitude")
+ax.set_ylabel("Latitude")
+ax.grid(True)
+
+# Show the plot in Streamlit
+st.pyplot(fig)
