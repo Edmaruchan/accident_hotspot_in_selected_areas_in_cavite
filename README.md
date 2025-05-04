@@ -1,4 +1,4 @@
-# :earth_americas: Accident Hotspots in selected areas in Cavite
+# :🚗: Accident Hotspots in selected areas in Cavite
 
 A simple Streamlit app showing the accident hotspots in selected areas in Cavite
 
