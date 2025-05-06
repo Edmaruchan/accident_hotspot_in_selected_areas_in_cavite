@@ -1,0 +1,6 @@
+[server]
+headless = true
+runOnSave = true
+
+[app]
+target = "road_accident_dashboard.py"
