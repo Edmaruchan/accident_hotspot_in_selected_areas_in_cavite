@@ -4,4 +4,4 @@ streamlit-folium
 plotly
 pandas
 scikit-learn
-mathplotlib
+matplotlib
