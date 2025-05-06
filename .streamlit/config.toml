@@ -1,6 +1,6 @@
 [server]
 headless = true
-runOnSave = true
 
-[app]
+[general]
+# This tells Streamlit Cloud which file to run
 target = "road_accident_dashboard.py"
