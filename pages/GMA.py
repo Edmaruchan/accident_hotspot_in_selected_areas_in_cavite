@@ -19,9 +19,9 @@ df['Date'] = pd.to_datetime(df['Date'], errors='coerce')  # errors='coerce' hand
 df['Year'] = df['Date'].dt.year
 df['Month'] = df['Date'].dt.month_name()
 
-# Sidebar controls for filtering
-st.sidebar.subheader("Statistics Options")
-stats_view = st.sidebar.selectbox("View Statistics By", ["Year", "Month"])
+# radio controls for filtering
+st.write("Statistics Options")
+stats_view = st.radio("View Statistics By", ["Year", "Month"])
 
 # Show statistics based on selection
 if stats_view == "Year":
