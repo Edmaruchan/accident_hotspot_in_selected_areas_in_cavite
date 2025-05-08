@@ -4,6 +4,7 @@ import numpy as np
 from sklearn.cluster import DBSCAN
 import matplotlib.pyplot as plt
 from sklearn.cluster import KMeans
+import plotly.express as px
 
 import streamlit as st
 from PIL import Image
@@ -22,11 +23,43 @@ if page == "Overview":
   st.subheader("Road Accident Hotspot Maps")
   col1, col2 = st.columns(2)
   with col1:
-     st.image("data/qgis_maps/all.png", caption="Map")
+     df = pd.read_csv("data/ALL.csv")
+     # Convert date column
+     df['Date'] = pd.to_datetime(df['Date'], errors='coerce')  # errors='coerce' handles invalid dates
+     df['Year'] = df['Date'].dt.year
+     df['Month'] = df['Date'].dt.month_name()
+
+     
+     st.subheader("Total Accidents per Year (Alfonso, GMA, Carmona)")
+     yearly_counts = df['Year'].value_counts().sort_index()
+     st.line_chart(yearly_counts)
+     st.write("...")
+     st.write("...")
+
   with col2:
-     st.image("data/qgis_maps/alfonso.png", caption="Alfonso Map")
-     st.image("data/qgis_maps/carmona.png", caption="Carmona Map")
-     st.image("data/qgis_maps/gma.png", caption="GMA Map")
+     st.subheader("Total Incidents per Month")
+     month_order = ["January", "February", "March", "April", "May", "June",
+                   "July", "August", "September", "October", "November", "December"]
+     monthly_counts = df['Month'].value_counts().reindex(month_order)
+     st.bar_chart(monthly_counts)
+     st.write("June and September have the highest number of incidents.")
+     st.write("August have the lowest number of incidents.")
+
+     st.subheader("Total Incidents per Month")
+     month_order = ["January", "February", "March", "April", "May", "June",
+                   "July", "August", "September", "October", "November", "December"]
+     monthly_counts = df['Month'].value_counts().reindex(month_order)
+     st.bar_chart(monthly_counts)
+
+     data = pd.DataFrame({
+    'Address': ['Location A', 'Location B', 'Location C'],
+    'Incidents': [12, 30, 22]
+})
+
+    # Horizontal bar chart
+     fig = px.bar(data, x='Incidents', y='Address', orientation='h',
+             title="Incidents per Address")
+     st.plotly_chart(fig)
         
   
 
