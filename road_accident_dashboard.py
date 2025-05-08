@@ -4,8 +4,8 @@ import numpy as np
 from sklearn.cluster import DBSCAN
 import matplotlib.pyplot as plt
 from sklearn.cluster import KMeans
-import plotly.express as px
 
+import plotly.express as px
 import streamlit as st
 from PIL import Image
 
@@ -21,61 +21,148 @@ page = st.radio("Select Area", ["Overview", "Alfonso", "GMA", "Carmona"])
 if page == "Overview":
   st.write("")
   st.subheader("Road Accident Hotspot Maps")
-  col1, col2 = st.columns(2)
-  with col1:
-     df = pd.read_csv("data/ALL.csv")
-     # Convert date column
-     df['Date'] = pd.to_datetime(df['Date'], errors='coerce')  # errors='coerce' handles invalid dates
-     df['Year'] = df['Date'].dt.year
-     df['Month'] = df['Date'].dt.month_name()
+  df = pd.read_csv("data/ALL.csv")
 
-     
-     st.subheader("Total Accidents per Year (Alfonso, GMA, Carmona)")
-     yearly_counts = df['Year'].value_counts().sort_index()
-     st.line_chart(yearly_counts)
-     st.write("...")
-     st.write("...")
+  df['Date'] = pd.to_datetime(df['Date'], errors='coerce')
 
-  with col2:
-     st.subheader("Total Incidents per Month")
-     month_order = ["January", "February", "March", "April", "May", "June",
-                   "July", "August", "September", "October", "November", "December"]
-     monthly_counts = df['Month'].value_counts().reindex(month_order)
-     st.bar_chart(monthly_counts)
-     st.write("June and September have the highest number of incidents.")
-     st.write("August have the lowest number of incidents.")
+# Extract the year from the date
+  df['Year'] = df['Date'].dt.year
 
-     st.subheader("Total Incidents per Month")
-     month_order = ["January", "February", "March", "April", "May", "June",
-                   "July", "August", "September", "October", "November", "December"]
-     monthly_counts = df['Month'].value_counts().reindex(month_order)
-     st.bar_chart(monthly_counts)
+# Count accidents per year and sort by year
+  yearly_counts = df['Year'].value_counts().sort_index()
+  yearly_df = yearly_counts.reset_index()
+  yearly_df.columns = ['Year', 'Total Accidents']
 
-     data = pd.DataFrame({
-    'Address': ['Location A', 'Location B', 'Location C'],
-    'Incidents': [12, 30, 22]
-})
+# Create a line graph using Plotly Express
+  fig = px.line(
+      yearly_df, 
+      x='Year', 
+      y='Total Accidents', 
+      title='Total Road Accidents per Year',
+      markers=True  # This will add markers to the line graph
+  )
 
-    # Horizontal bar chart
-     fig = px.bar(data, x='Incidents', y='Address', orientation='h',
-             title="Incidents per Address")
-     st.plotly_chart(fig)
-        
-  
+# Set x-axis to show each year (especially useful if you have only a few years)
+  fig.update_layout(xaxis=dict(tickmode='linear'))
+
+# Display the graph in Streamlit
+  st.plotly_chart(fig)
+
+  df = pd.read_csv("data/ALL.csv")
+
+# Strip whitespace from column names
+  df.columns = df.columns.str.strip()
+
+# Clean Address column: drop NaNs and strip whitespace
+  df['Address'] = df['Address'].astype(str).str.strip()
+
+# Count incidents per address
+  incident_counts = df['Address'].value_counts().reset_index()
+  incident_counts.columns = ['Address', 'Total Incidents']
+
+# Plot interactive horizontal bar chart
+  fig = px.bar(
+    incident_counts,
+    x='Total Incidents',
+    y='Address',
+    orientation='h',
+    title='Total Road Accidents per Barangay (Alfonso, Carmona, GMA) Cavite',
+    labels={'Total Incidents': 'Number of Accidents'},
+    hover_data={'Total Incidents': True, 'Address': True}
+  )
+
+  fig.update_layout(
+    yaxis={'categoryorder': 'total ascending'},
+    height=1000,         # Adjust height here
+    width=900,           # Add custom width
+    margin=dict(l=150),  # More left margin for long address labels
+  )
+
+  st.plotly_chart(fig, use_container_width=False)
 
 elif page == "Alfonso":
     st.subheader("Alfonso Analysis")
     st.image("data/qgis_maps/alfonso.png", caption="Hotspots in Alfonso")
-    # Show stats, graphs, etc.
+
+    df = pd.read_csv("data/Alfonso/ALFONSO 2020 - 2024.csv")
+
+    df.columns = df.columns.str.strip()
+   
+    incident_counts = df['Address'].value_counts().reset_index()
+    incident_counts.columns = ['Address', 'Total Incidents']
+
+    # Create interactive horizontal bar chart
+    fig = px.bar(
+        incident_counts,
+        x='Total Incidents',
+        y='Address',
+        orientation='h',
+        title='Total Road Accidents per Address in Alfonso',
+        labels={'Total Incidents': 'Number of Accidents'},
+        hover_data={'Total Incidents': True, 'Address': True}
+    )
+
+    fig.update_layout(yaxis={'categoryorder': 'total ascending'}, height=800)
+
+    st.plotly_chart(fig)
+    
 elif page == "GMA":
     st.subheader("GMA Analysis")
     st.image("data/qgis_maps/gma.png", caption="Hotspots in GMA")
     st.image("data/qgis_maps/GMA/gma_heatmap.png", caption="Accident Heatmap in GMA")
     st.image("data/qgis_maps/GMA/gma_month.png", caption="W.I.P")
     st.image("data/qgis_maps/GMA/gma_year_1.png", caption="W.I.P")
+
+    df = pd.read_csv("data/GMA/GMA 2020 - 2024.csv")
+
+    df.columns = df.columns.str.strip()
+   
+    incident_counts = df['Address'].value_counts().reset_index()
+    incident_counts.columns = ['Address', 'Total Incidents']
+
+    # Create interactive horizontal bar chart
+    fig = px.bar(
+        incident_counts,
+        x='Total Incidents',
+        y='Address',
+        orientation='h',
+        title='Total Road Accidents per Barangay in GMA',
+        labels={'Total Incidents': 'Number of Accidents'},
+        hover_data={'Total Incidents': True, 'Address': True}
+    )
+
+    fig.update_layout(yaxis={'categoryorder': 'total ascending'}, height=800)
+
+    st.plotly_chart(fig)
+
 elif page == "Carmona":
     st.subheader("Carmona Analysis")
     st.image("data/qgis_maps/carmona.png", caption="Hotspots in Carmona")
+
+    df = pd.read_csv("data/Carmona/CARMONA 2020 - 2024.csv")
+    
+
+    df = pd.read_csv("data/Carmona/CARMONA 2020 - 2024.csv")
+
+    df.columns = df.columns.str.strip()
+   
+    incident_counts = df['Address'].value_counts().reset_index()
+    incident_counts.columns = ['Address', 'Total Incidents']
+
+    # Create interactive horizontal bar chart
+    fig = px.bar(
+        incident_counts,
+        x='Total Incidents',
+        y='Address',
+        orientation='h',
+        title='Total Road Accidents per Barangay in Carmona',
+        labels={'Total Incidents': 'Number of Accidents'},
+        hover_data={'Total Incidents': True, 'Address': True}
+    )
+
+    fig.update_layout(yaxis={'categoryorder': 'total ascending'}, height=800)
+
+    st.plotly_chart(fig)
 
 
 # Sidebar – Controls

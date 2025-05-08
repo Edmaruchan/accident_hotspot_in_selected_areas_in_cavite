@@ -54,3 +54,8 @@ elif stats_view == "Month":
     st.bar_chart(monthly_counts)
     st.write("June and September have the highest number of incidents.")
     st.write("August have the lowest number of incidents.")
+
+
+    df = pd.read_csv("data/ALL.csv")
+     # Convert date column
+    
