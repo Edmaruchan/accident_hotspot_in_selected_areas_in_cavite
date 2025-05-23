@@ -6,3 +6,5 @@ pandas
 scikit-learn
 matplotlib
 numpy
+pyproj
+kneed
