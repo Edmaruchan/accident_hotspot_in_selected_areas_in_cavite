@@ -523,6 +523,53 @@ elif page == "GMA":
         st.write(f"Noise Points: {(df['cluster'] == -1).sum()}")
                         
 
+        df = pd.read_csv("data/GMA/GMA total.csv")
+        
+                # Select number of clusters
+        k = st.slider("Select number of clusters (K)", min_value=1, max_value=10, value=3)
+
+        # Perform KMeans clustering
+        X = df[['Number of Accidents']]
+        kmeans = KMeans(n_clusters=k, random_state=42)
+        df['Cluster'] = kmeans.fit_predict(X)
+
+        # Display clustered data
+        st.subheader("Clustered Data")
+        st.dataframe(df)
+
+        # Plot the clusters
+        fig, ax = plt.subplots()
+        colors = ['red', 'blue', 'green', 'purple', 'orange', 'cyan', 'magenta', 'yellow', 'gray', 'brown']
+        for cluster in range(k):
+            cluster_data = df[df['Cluster'] == cluster]
+            ax.scatter(cluster_data['Barangay'], cluster_data['Number of Accidents'],
+                    color=colors[cluster % len(colors)],
+                    label=f'Cluster {cluster}', s=100)
+
+        ax.set_xlabel("Barangay")
+        ax.set_ylabel("Number of Accidents")
+        ax.set_title("KMeans Clustering of Barangays")
+        ax.tick_params(axis='x', rotation=90)
+        ax.legend()
+        st.pyplot(fig)
+        
+        # Elbow method to determine optimal k
+        inertia = []
+        K = range(1, 10)
+        for k in K:
+            kmeans = KMeans(n_clusters=k, random_state=42)
+            kmeans.fit(X)
+            inertia.append(kmeans.inertia_)
+
+        fig, ax = plt.subplots()
+        ax.plot(K, inertia, 'bx-')
+        ax.set_xlabel('Number of clusters (k)')
+        ax.set_ylabel('Inertia')
+        ax.set_title('Elbow Method For Optimal k')
+
+        st.subheader("Elbow Method to Determine Optimal k")
+        st.pyplot(fig)
+        
 elif page == "Carmona":
 
 ###################### Carmona ######################
@@ -746,5 +793,53 @@ elif page == "Carmona":
         
         st.write(f"Detected Clusters: {df['cluster'].nunique() - (1 if -1 in df['cluster'].unique() else 0)}")
         st.write(f"Noise Points: {(df['cluster'] == -1).sum()}")
+        
+        
+        df = pd.read_csv("data/Carmona/CARMONA total.csv")
+        
+                # Select number of clusters
+        k = st.slider("Select number of clusters (K)", min_value=1, max_value=10, value=3)
+
+        # Perform KMeans clustering
+        X = df[['Number of Accidents']]
+        kmeans = KMeans(n_clusters=k, random_state=42)
+        df['Cluster'] = kmeans.fit_predict(X)
+
+        # Display clustered data
+        st.subheader("Clustered Data")
+        st.dataframe(df)
+
+        # Plot the clusters
+        fig, ax = plt.subplots()
+        colors = ['red', 'blue', 'green', 'purple', 'orange', 'cyan', 'magenta', 'yellow', 'gray', 'brown']
+        for cluster in range(k):
+            cluster_data = df[df['Cluster'] == cluster]
+            ax.scatter(cluster_data['Barangay'], cluster_data['Number of Accidents'],
+                    color=colors[cluster % len(colors)],
+                    label=f'Cluster {cluster}', s=100)
+
+        ax.set_xlabel("Barangay")
+        ax.set_ylabel("Number of Accidents")
+        ax.set_title("KMeans Clustering of Barangays")
+        ax.tick_params(axis='x', rotation=90)
+        ax.legend()
+        st.pyplot(fig)
+        
+        # Elbow method to determine optimal k
+        inertia = []
+        K = range(1, 10)
+        for k in K:
+            kmeans = KMeans(n_clusters=k, random_state=42)
+            kmeans.fit(X)
+            inertia.append(kmeans.inertia_)
+
+        fig, ax = plt.subplots()
+        ax.plot(K, inertia, 'bx-')
+        ax.set_xlabel('Number of clusters (k)')
+        ax.set_ylabel('Inertia')
+        ax.set_title('Elbow Method For Optimal k')
+
+        st.subheader("Elbow Method to Determine Optimal k")
+        st.pyplot(fig)
                         
 
