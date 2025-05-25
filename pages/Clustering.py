@@ -13,6 +13,8 @@ from kneed import KneeLocator
 import plotly.graph_objects as go
 from sklearn.preprocessing import StandardScaler
 import matplotlib.patches as mpatches
+import folium
+from streamlit_folium import st_folium
 
 
 
@@ -126,6 +128,58 @@ if page == "Alfonso":
 
         st.plotly_chart(fig_elbow_alfonso)
         
+################## K means clustering based on number of accidents ####################
+        df = pd.read_csv("data/Alfonso/ALFONSO total.csv")
+        
+        # Elbow method to determine optimal k
+        X = df[['Number of Accidents']]
+        inertia = []
+        K = range(1, 10)
+        for k in K:
+            kmeans = KMeans(n_clusters=k, random_state=42)
+            kmeans.fit(X)
+            inertia.append(kmeans.inertia_)
+
+        fig, ax = plt.subplots()
+        ax.plot(K, inertia, 'bx-')
+        ax.set_xlabel('Number of clusters (k)')
+        ax.set_ylabel('Inertia')
+        ax.set_title('Elbow Method For Optimal k')
+
+        st.subheader("Elbow Method to Determine Optimal k for number of accidents")
+        st.pyplot(fig)
+                # Select number of clusters
+        k = st.slider("Select number of clusters (K)", min_value=1, max_value=10, value=3)
+
+        # Perform KMeans clustering
+        X = df[['Number of Accidents']]
+        kmeans = KMeans(n_clusters=k, random_state=42)
+        df['Cluster'] = kmeans.fit_predict(X)
+
+        # Display clustered data
+        st.subheader("Clustered Data")
+        st.dataframe(df)
+
+        # Plot the clusters
+        fig, ax = plt.subplots()
+        colors = ['red', 'blue', 'green', 'purple', 'orange', 'cyan', 'magenta', 'yellow', 'gray', 'brown']
+        for cluster in range(k):
+            cluster_data = df[df['Cluster'] == cluster]
+            ax.scatter(cluster_data['Number of Accidents'],cluster_data['Barangay'],
+                    color=colors[cluster % len(colors)],
+                    label=f'Cluster {cluster}', s=100)
+
+        ax.set_xlabel("Number of Accidents")
+        ax.set_ylabel("Barangay")
+        ax.set_title("KMeans Clustering of Barangays based on Number of Accidents")
+        ax.tick_params(axis='x', rotation=0)
+        ax.legend()
+        st.pyplot(fig)
+        
+        
+        
+##################### DBSCAN ###########################        
+        
     elif tab == "DBSCAN":
         
         df = pd.read_csv("data/Alfonso/ALFONSO 2020 - 2024.csv")
@@ -186,8 +240,6 @@ if page == "Alfonso":
         st.plotly_chart(fig)
         
         
-        df = pd.read_csv("data/Alfonso/ALFONSO 2020 - 2024.csv")
-        
         # Load data
         df = pd.read_csv("data/Alfonso/ALFONSO 2020 - 2024.csv")
         df = df.dropna(subset=["Latitude", "Longitude"])
@@ -214,87 +266,43 @@ if page == "Alfonso":
         noise = df[df['cluster'] == -1]
 
         # Plotting
-        fig, ax = plt.subplots(figsize=(8, 6))
+        # Center of the map
+        map_center = [df['Latitude'].mean(), df['Longitude'].mean()]
+        m = folium.Map(location=map_center, zoom_start=12, tiles="OpenStreetMap")
 
-        # Plot clusters
-        unique_clusters = clusters['cluster'].unique()
-        colors = plt.cm.tab20(np.linspace(0, 1, len(unique_clusters)))
-        handles = []
+        # Define colors for clusters
+        colors = [
+            '#1f77b4', '#ff7f0e', '#2ca02c', '#d62728', '#9467bd', '#8c564b',
+            '#e377c2', '#7f7f7f', '#bcbd22', '#17becf'
+        ]
 
-        for i, cluster_id in enumerate(unique_clusters):
-            cluster_data = clusters[clusters['cluster'] == cluster_id]
-            ax.scatter(cluster_data['Longitude'], cluster_data['Latitude'], 
-                    c=[colors[i]], s=10, label=f'Cluster {cluster_id}')
-            handles.append(mpatches.Patch(color=colors[i], label=f'Cluster {cluster_id}'))
+        # Plot clustered points
+        for cluster_id in sorted(df['cluster'].unique()):
+            cluster_points = df[df['cluster'] == cluster_id]
+            
+            color = 'gray' if cluster_id == -1 else colors[cluster_id % len(colors)]
+            cluster_label = 'Noise' if cluster_id == -1 else f'Cluster {cluster_id}'
+            
+            for _, row in cluster_points.iterrows():
+                folium.CircleMarker(
+                    location=[row['Latitude'], row['Longitude']],
+                    radius=3,
+                    color=color,
+                    fill=True,
+                    fill_opacity=0.7,
+                    popup=cluster_label
+                ).add_to(m)
 
-        # Plot noise points
-        if not noise.empty:
-            ax.scatter(noise['Longitude'], noise['Latitude'], 
-                    c='gray', s=10, marker='x', label='Noise')
-            handles.append(mpatches.Patch(color='gray', label='Noise'))
+        # Show map in Streamlit
+        st.subheader("Interactive DBSCAN Cluster Map")
+        st_folium(m, width=700, height=500)
 
-        # Legend
-        ax.legend(handles=handles, title="Clusters", loc='upper right', fontsize=8, title_fontsize=9)
-
-        # Axis labels and grid
-        ax.set_title("DBSCAN Clustering")
-        ax.set_xlabel("Longitude")
-        ax.set_ylabel("Latitude")
-        ax.grid(True)
-
-        # Show in Streamlit
-        st.pyplot(fig)
-        
+        # Show summary stats
         st.write(f"Detected Clusters: {df['cluster'].nunique() - (1 if -1 in df['cluster'].unique() else 0)}")
         st.write(f"Noise Points: {(df['cluster'] == -1).sum()}")
         
         ###########################
-        df = pd.read_csv("data/Alfonso/ALFONSO total.csv")
         
-                # Select number of clusters
-        k = st.slider("Select number of clusters (K)", min_value=1, max_value=10, value=3)
-
-        # Perform KMeans clustering
-        X = df[['Number of Accidents']]
-        kmeans = KMeans(n_clusters=k, random_state=42)
-        df['Cluster'] = kmeans.fit_predict(X)
-
-        # Display clustered data
-        st.subheader("Clustered Data")
-        st.dataframe(df)
-
-        # Plot the clusters
-        fig, ax = plt.subplots()
-        colors = ['red', 'blue', 'green', 'purple', 'orange', 'cyan', 'magenta', 'yellow', 'gray', 'brown']
-        for cluster in range(k):
-            cluster_data = df[df['Cluster'] == cluster]
-            ax.scatter(cluster_data['Barangay'], cluster_data['Number of Accidents'],
-                    color=colors[cluster % len(colors)],
-                    label=f'Cluster {cluster}', s=100)
-
-        ax.set_xlabel("Barangay")
-        ax.set_ylabel("Number of Accidents")
-        ax.set_title("KMeans Clustering of Barangays")
-        ax.tick_params(axis='x', rotation=45)
-        ax.legend()
-        st.pyplot(fig)
-        
-        # Elbow method to determine optimal k
-        inertia = []
-        K = range(1, 10)
-        for k in K:
-            kmeans = KMeans(n_clusters=k, random_state=42)
-            kmeans.fit(X)
-            inertia.append(kmeans.inertia_)
-
-        fig, ax = plt.subplots()
-        ax.plot(K, inertia, 'bx-')
-        ax.set_xlabel('Number of clusters (k)')
-        ax.set_ylabel('Inertia')
-        ax.set_title('Elbow Method For Optimal k')
-
-        st.subheader("Elbow Method to Determine Optimal k")
-        st.pyplot(fig)
         
 
 elif page == "GMA":
@@ -400,6 +408,55 @@ elif page == "GMA":
                             yaxis_title="Inertia")
 
         st.plotly_chart(fig_elbow_gma)
+        
+        
+        ################## K means clustering based on number of accidents ####################
+        df = pd.read_csv("data/GMA/GMA total.csv")
+        
+        # Elbow method to determine optimal k
+        X = df[['Number of Accidents']]
+        inertia = []
+        K = range(1, 10)
+        for k in K:
+            kmeans = KMeans(n_clusters=k, random_state=42)
+            kmeans.fit(X)
+            inertia.append(kmeans.inertia_)
+
+        fig, ax = plt.subplots()
+        ax.plot(K, inertia, 'bx-')
+        ax.set_xlabel('Number of clusters (k)')
+        ax.set_ylabel('Inertia')
+        ax.set_title('Elbow Method For Optimal k')
+
+        st.subheader("Elbow Method to Determine Optimal k for number of accidents")
+        st.pyplot(fig)
+                # Select number of clusters
+        k = st.slider("Select number of clusters (K)", min_value=1, max_value=10, value=3)
+
+        # Perform KMeans clustering
+        X = df[['Number of Accidents']]
+        kmeans = KMeans(n_clusters=k, random_state=42)
+        df['Cluster'] = kmeans.fit_predict(X)
+
+        # Display clustered data
+        st.subheader("Clustered Data")
+        st.dataframe(df)
+
+        # Plot the clusters
+        fig, ax = plt.subplots()
+        colors = ['red', 'blue', 'green', 'purple', 'orange', 'cyan', 'magenta', 'yellow', 'gray', 'brown']
+        for cluster in range(k):
+            cluster_data = df[df['Cluster'] == cluster]
+            ax.scatter(cluster_data['Number of Accidents'],cluster_data['Barangay'],
+                    color=colors[cluster % len(colors)],
+                    label=f'Cluster {cluster}', s=100)
+
+        ax.set_xlabel("Number of Accidents")
+        ax.set_ylabel("Barangay")
+        ax.set_title("KMeans Clustering of Barangays based on Number of Accidents")
+        ax.tick_params(axis='x', rotation=0)
+        ax.legend()
+        st.pyplot(fig)
         
         
     elif tab == "DBSCAN":
@@ -674,6 +731,57 @@ elif page == "Carmona":
         st.plotly_chart(fig_elbow_gma)
         
         
+        ################## K means clustering based on number of accidents ####################
+        df = pd.read_csv("data/Carmona/CARMONA total.csv")
+        
+        # Elbow method to determine optimal k
+        X = df[['Number of Accidents']]
+        inertia = []
+        K = range(1, 8)
+        for k in K:
+            kmeans = KMeans(n_clusters=k, random_state=42)
+            kmeans.fit(X)
+            inertia.append(kmeans.inertia_)
+
+        fig, ax = plt.subplots()
+        ax.plot(K, inertia, 'bx-')
+        ax.set_xlabel('Number of clusters (k)')
+        ax.set_ylabel('Inertia')
+        ax.set_title('Elbow Method For Optimal k')
+
+        st.subheader("Elbow Method to Determine Optimal k for number of accidents")
+        st.pyplot(fig)
+                # Select number of clusters
+        k = st.slider("Select number of clusters (K)", min_value=1, max_value=10, value=3)
+
+        # Perform KMeans clustering
+        X = df[['Number of Accidents']]
+        kmeans = KMeans(n_clusters=k, random_state=42)
+        df['Cluster'] = kmeans.fit_predict(X)
+
+        # Display clustered data
+        st.subheader("Clustered Data")
+        st.dataframe(df)
+
+        # Plot the clusters
+        fig, ax = plt.subplots()
+        colors = ['red', 'blue', 'green', 'purple', 'orange', 'cyan', 'magenta', 'yellow', 'gray', 'brown']
+        for cluster in range(k):
+            cluster_data = df[df['Cluster'] == cluster]
+            ax.scatter(cluster_data['Number of Accidents'],cluster_data['Barangay'],
+                    color=colors[cluster % len(colors)],
+                    label=f'Cluster {cluster}', s=100)
+
+        ax.set_xlabel("Number of Accidents")
+        ax.set_ylabel("Barangay")
+        ax.set_title("KMeans Clustering of Barangays based on Number of Accidents")
+        ax.tick_params(axis='x', rotation=0)
+        ax.legend()
+        st.pyplot(fig)
+
+
+################################### DBSCAN ####################################
+        
     elif tab == "DBSCAN":
     
         df = pd.read_csv("data/Carmona/CARMONA 2020 - 2024.csv")
@@ -793,53 +901,3 @@ elif page == "Carmona":
         
         st.write(f"Detected Clusters: {df['cluster'].nunique() - (1 if -1 in df['cluster'].unique() else 0)}")
         st.write(f"Noise Points: {(df['cluster'] == -1).sum()}")
-        
-        
-        df = pd.read_csv("data/Carmona/CARMONA total.csv")
-        
-                # Select number of clusters
-        k = st.slider("Select number of clusters (K)", min_value=1, max_value=10, value=3)
-
-        # Perform KMeans clustering
-        X = df[['Number of Accidents']]
-        kmeans = KMeans(n_clusters=k, random_state=42)
-        df['Cluster'] = kmeans.fit_predict(X)
-
-        # Display clustered data
-        st.subheader("Clustered Data")
-        st.dataframe(df)
-
-        # Plot the clusters
-        fig, ax = plt.subplots()
-        colors = ['red', 'blue', 'green', 'purple', 'orange', 'cyan', 'magenta', 'yellow', 'gray', 'brown']
-        for cluster in range(k):
-            cluster_data = df[df['Cluster'] == cluster]
-            ax.scatter(cluster_data['Barangay'], cluster_data['Number of Accidents'],
-                    color=colors[cluster % len(colors)],
-                    label=f'Cluster {cluster}', s=100)
-
-        ax.set_xlabel("Barangay")
-        ax.set_ylabel("Number of Accidents")
-        ax.set_title("KMeans Clustering of Barangays")
-        ax.tick_params(axis='x', rotation=90)
-        ax.legend()
-        st.pyplot(fig)
-        
-        # Elbow method to determine optimal k
-        inertia = []
-        K = range(1, 10)
-        for k in K:
-            kmeans = KMeans(n_clusters=k, random_state=42)
-            kmeans.fit(X)
-            inertia.append(kmeans.inertia_)
-
-        fig, ax = plt.subplots()
-        ax.plot(K, inertia, 'bx-')
-        ax.set_xlabel('Number of clusters (k)')
-        ax.set_ylabel('Inertia')
-        ax.set_title('Elbow Method For Optimal k')
-
-        st.subheader("Elbow Method to Determine Optimal k")
-        st.pyplot(fig)
-                        
-
