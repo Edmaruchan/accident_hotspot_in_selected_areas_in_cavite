@@ -200,127 +200,97 @@ if page == "Alfonso":
     elif tab == "DBSCAN":
         
         df = pd.read_csv("data/Alfonso/ALFONSO 2020 - 2024.csv")
-
-        coords_deg = df[['Latitude', 'Longitude']].dropna().values
         
-       
-        coords_rad = np.radians(coords_deg)
-        eps_rad = 0.1 / 6371.0  # 100 meters in radians (Earth radius in km)\
-        db = DBSCAN(eps=eps_rad, min_samples=3, metric='haversine')
+        coords_deg = df[['Latitude', 'Longitude']].dropna().values
 
-        # Set min_samples for DBSCAN (k = min_samples - 1)
-        min_samples = 3  # 2+1 for core point
+        # Convert degrees to radians
+        coords_rad = np.radians(coords_deg)
+
+        # Parameters
+        min_samples = 4
         k = min_samples - 1
 
-        # Compute k-distance
-        neighbors = NearestNeighbors(n_neighbors=k)
+        # K-Distance calculation
+        neighbors = NearestNeighbors(n_neighbors=k, metric='haversine')
         neighbors_fit = neighbors.fit(coords_rad)
-        distances, indices = neighbors_fit.kneighbors(coords_rad)
+        distances, _ = neighbors_fit.kneighbors(coords_rad)
 
-        k_distances = np.sort(distances[:, k - 1])
+        # Convert to meters and sort
+        k_distances_m = np.sort(distances[:, k - 1] * 6371000)
 
-        # Find the elbow point
+        # Optional: remove top 5% to reduce outlier effects
+        cutoff = int(len(k_distances_m) * 0.95)
+        trimmed_distances = k_distances_m[:cutoff]
+
+        # Elbow detection
         kneedle = KneeLocator(
-            range(len(k_distances)), k_distances,
+            range(len(trimmed_distances)), trimmed_distances,
             curve="convex", direction="increasing"
         )
         elbow_index = kneedle.knee
-        elbow_value = k_distances[elbow_index] if elbow_index is not None else None
+        elbow_value = trimmed_distances[elbow_index] if elbow_index is not None else None
 
-        # Plot
-        fig, ax = plt.subplots(figsize=(8, 5))
-        ax.plot(k_distances, label="k-distance")
+        # Plot K-Distance using Plotly
+        fig1 = go.Figure()
+        fig1.add_trace(go.Scatter(y=k_distances_m, mode='lines', name='k-distance (m)'))
+
         if elbow_index is not None:
-            ax.axvline(x=elbow_index, color='red', linestyle='--', label=f"Elbow at index {elbow_index}")
-            ax.axhline(y=elbow_value, color='orange', linestyle='--', label=f"Recommended ε ≈ {elbow_value:.4f}")
+            fig1.add_vline(x=elbow_index, line_dash="dash", line_color="red", name="Elbow Index")
+            fig1.add_hline(y=elbow_value, line_dash="dash", line_color="orange", name="Elbow ε")
+            fig1.add_trace(go.Scatter(
+                x=[elbow_index], y=[elbow_value],
+                mode='markers+text',
+                marker=dict(color='red', size=8),
+                text=[f"ε ≈ {elbow_value:.2f} m"],
+                textposition="top right"
+            ))
 
-        ax.set_title("K-Distance Plot (Elbow = Optimal Epsilon for DBSCAN)")
-        ax.set_xlabel("Points (sorted)")
-        ax.set_ylabel(f"{k}th Nearest Neighbor Distance")
-        ax.legend()
-        ax.grid(True)
+        fig1.update_layout(
+            title="📈 K-Distance Plot for DBSCAN Epsilon",
+            xaxis_title="Points (sorted)",
+            yaxis_title="3rd Nearest Neighbor Distance (m)",
+            height=400
+        )
+        st.plotly_chart(fig1)
 
-        # Display plot
-        st.pyplot(fig)
+        if elbow_value:
+            st.success(f"✅ Recommended eps (epsilon) for DBSCAN: **{elbow_value:.2f} meters**")
 
-        # Show recommended epsilon
-        if elbow_value is not None:
-            st.success(f"✅ Recommended eps (epsilon) for DBSCAN: **{elbow_value:.4f}**")
+            # Apply DBSCAN
+            eps_rad = elbow_value / 6371000
+            db = DBSCAN(eps=eps_rad, min_samples=min_samples, metric='haversine')
+            df = df.dropna(subset=['Latitude', 'Longitude']).copy()
+            df['Cluster'] = db.fit_predict(np.radians(df[['Latitude', 'Longitude']]))
+
+            # Summary
+            n_clusters = len(set(df['Cluster'])) - (1 if -1 in df['Cluster'] else 0)
+            n_noise = (df['Cluster'] == -1).sum()
+            st.success(f"🧠 DBSCAN Result: {n_clusters} cluster(s), {n_noise} noise point(s).")
+
+            # Plot clusters using Plotly
+            fig2 = px.scatter_mapbox(
+                df,
+                lat="Latitude",
+                lon="Longitude",
+                color=df['Cluster'].astype(str),
+                hover_data=["Cluster"],
+                zoom=11,
+                height=600,
+                title="🗺️ DBSCAN Clustering (Interactive Map)"
+            )
+            fig2.update_layout(mapbox_style="open-street-map")
+            st.plotly_chart(fig2)
         else:
-            st.warning("⚠️ Elbow point not found. Try adjusting min_samples or check the data.")
-        
-        
-        
-####################### interactive map ##########################
-        # Load data
-        df = pd.read_csv("data/Alfonso/ALFONSO 2020 - 2024.csv")
-        df = df.dropna(subset=["Latitude", "Longitude"])
+            st.warning("⚠️ Elbow not detected. Try adjusting the data or min_samples.")
 
-        coords = df[['Latitude', 'Longitude']].values
-
-        st.subheader("DBSCAN Clustering")
-
-        eps_meters = elbow_value
-        min_sample = 3
-        
-
-        # DBSCAN parameters
-        coords_rad = np.radians(coords)
-        #eps_rad = eps_meters / 6371.0  # Earth radius in km
-
-        
-        eps_rad = eps_meters / 6371.0  # 300 meters in radians
-        db = DBSCAN(eps=eps_rad, min_samples=min_sample, metric='haversine')
-        df['cluster'] = db.fit_predict(coords_rad)
-
-        # Separate clusters and noise
-        clusters = df[df['cluster'] != -1]
-        noise = df[df['cluster'] == -1]
-
-        # Plotting
-        # Center of the map
-        map_center = [df['Latitude'].mean(), df['Longitude'].mean()]
-        m = folium.Map(location=map_center, zoom_start=12, tiles="OpenStreetMap")
-
-        # Define colors for clusters
-        colors = [
-            '#1f77b4', '#ff7f0e', '#2ca02c', '#d62728', '#9467bd', '#8c564b',
-            '#e377c2', '#7f7f7f', '#bcbd22', '#17becf'
-        ]
-
-        # Plot clustered points
-        for cluster_id in sorted(df['cluster'].unique()):
-            cluster_points = df[df['cluster'] == cluster_id]
-            
-            color = 'gray' if cluster_id == -1 else colors[cluster_id % len(colors)]
-            cluster_label = 'Noise' if cluster_id == -1 else f'Cluster {cluster_id}'
-            
-            for _, row in cluster_points.iterrows():
-                folium.CircleMarker(
-                    location=[row['Latitude'], row['Longitude']],
-                    radius=3,
-                    color=color,
-                    fill=True,
-                    fill_opacity=0.7,
-                    popup=cluster_label
-                ).add_to(m)
-
-        # Show map in Streamlit
-        st.subheader("Interactive DBSCAN Cluster Map")
-        st_folium(m, width=700, height=500)
-
-        # Show summary stats
-        st.write(f"Detected Clusters: {df['cluster'].nunique() - (1 if -1 in df['cluster'].unique() else 0)}")
-        st.write(f"Noise Points: {(df['cluster'] == -1).sum()}")
-        
-        ###########################
-        
-        
+                
+                
+######################### GMA ###############################
 
 elif page == "GMA":
 
 
-######################### GMA ###############################
+
 
 
     st.write("Clustering in GMA")
