@@ -35,6 +35,8 @@ if page == "Alfonso":
 
         st.subheader("K-Means Clustering")
             
+########### Open streetmap ######################
+            
         df = pd.read_csv("data/Alfonso/ALFONSO 2020 - 2024.csv")
 
     # Drop rows with missing coordinates
@@ -69,96 +71,111 @@ if page == "Alfonso":
         st.plotly_chart(fig_alfonso)
 
 
-        # ELBOW METHOD
+        col1, col2 = st.columns(2)
+        
+        with col1:
 
-        df = pd.read_csv("data/Alfonso/ALFONSO 2020 - 2024.csv")
+############# ELBOW METHOD ######################
 
-        # Drop rows with missing lat/lon
-        df = df.dropna(subset=['Latitude', 'Longitude'])
+            df = pd.read_csv("data/Alfonso/ALFONSO 2020 - 2024.csv")
 
-        # Use only coordinates for clustering
-        coords = df[['Latitude', 'Longitude']]
+            # Drop rows with missing lat/lon
+            df = df.dropna(subset=['Latitude', 'Longitude'])
 
-        # Elbow method: compute inertia for a range of k
-        inertias = []
-        k_range = range(1, 11)
+            # Use only coordinates for clustering
+            coords = df[['Latitude', 'Longitude']]
 
-        for k in k_range:
-            kmeans = KMeans(n_clusters=k, random_state=0, n_init='auto')
-            kmeans.fit(coords)
-            inertias.append(kmeans.inertia_)
+            # Elbow method: compute inertia for a range of k
+            inertias = []
+            k_range = range(1, 11)
 
-        # Plot the Elbow chart
-        fig_elbow_alfonso = go.Figure()
-        fig_elbow_alfonso .add_trace(go.Scatter(x=list(k_range), y=inertias, mode='lines+markers'))
-        fig_elbow_alfonso .update_layout(title="Elbow Method for Optimal k",
-                            xaxis_title="Number of Clusters (k)",
-                            yaxis_title="Inertia (Within-cluster sum of squares)")
+            for k in k_range:
+                kmeans = KMeans(n_clusters=k, random_state=0, n_init='auto')
+                kmeans.fit(coords)
+                inertias.append(kmeans.inertia_)
 
-        st.plotly_chart(fig_elbow_alfonso )
+            # Plot the Elbow chart
+            fig_elbow_alfonso = go.Figure()
+            fig_elbow_alfonso .add_trace(go.Scatter(x=list(k_range), y=inertias, mode='lines+markers'))
+            fig_elbow_alfonso .update_layout(title="Elbow Method for Optimal k",
+                                xaxis_title="Number of Clusters (k)",
+                                yaxis_title="Inertia (Within-cluster sum of squares)")
+
+            st.plotly_chart(fig_elbow_alfonso )
 
 
-
+        with col2:
         ############### Automation of the elbow method ####################
 
-        # Load and clean data
-        df = pd.read_csv("data/Alfonso/ALFONSO 2020 - 2024.csv")
-        df = df.dropna(subset=['Latitude', 'Longitude'])
-        coords = df[['Latitude', 'Longitude']]
+            # Load and clean data
+            df = pd.read_csv("data/Alfonso/ALFONSO 2020 - 2024.csv")
+            df = df.dropna(subset=['Latitude', 'Longitude'])
+            coords = df[['Latitude', 'Longitude']]
 
-        # Compute inertia for k = 1 to 10
-        inertias = []
-        k_range = range(1, 11)
-        for k in k_range:
-            kmeans = KMeans(n_clusters=k, random_state=0, n_init='auto')
-            kmeans.fit(coords)
-            inertias.append(kmeans.inertia_)
+            # Compute inertia for k = 1 to 10
+            inertias = []
+            k_range = range(1, 11)
+            for k in k_range:
+                kmeans = KMeans(n_clusters=k, random_state=0, n_init='auto')
+                kmeans.fit(coords)
+                inertias.append(kmeans.inertia_)
 
-    # Use kneed to detect the elbow
-        knee = KneeLocator(k_range, inertias, curve='convex', direction='decreasing')
-        optimal_k = knee.elbow
+        # Use kneed to detect the elbow
+            knee = KneeLocator(k_range, inertias, curve='convex', direction='decreasing')
+            optimal_k = knee.elbow
 
-    # Show Elbow Plot
-        fig_elbow_alfonso  = go.Figure()
-        fig_elbow_alfonso .add_trace(go.Scatter(x=list(k_range), y=inertias, mode='lines+markers'))
-        fig_elbow_alfonso .add_vline(x=optimal_k, line_width=2, line_dash='dash', line_color='red')
-        fig_elbow_alfonso .update_layout(title=f"Elbow Method - Optimal k: {optimal_k}",
-                        xaxis_title="Number of Clusters (k)",
-                        yaxis_title="Inertia")
+        # Show Elbow Plot
+            fig_elbow_alfonso  = go.Figure()
+            fig_elbow_alfonso .add_trace(go.Scatter(x=list(k_range), y=inertias, mode='lines+markers'))
+            fig_elbow_alfonso .add_vline(x=optimal_k, line_width=2, line_dash='dash', line_color='red')
+            fig_elbow_alfonso .update_layout(title=f"Elbow Method - Optimal k: {optimal_k}",
+                            xaxis_title="Number of Clusters (k)",
+                            yaxis_title="Inertia")
 
-        st.plotly_chart(fig_elbow_alfonso)
+            st.plotly_chart(fig_elbow_alfonso)
         
 ################## K means clustering based on number of accidents ####################
         df = pd.read_csv("data/Alfonso/ALFONSO total.csv")
         
-        # Elbow method to determine optimal k
+        # Elbow method data preparation
         X = df[['Number of Accidents']]
         inertia = []
         K = range(1, 10)
+
         for k in K:
             kmeans = KMeans(n_clusters=k, random_state=42)
             kmeans.fit(X)
             inertia.append(kmeans.inertia_)
 
-        fig, ax = plt.subplots()
-        ax.plot(K, inertia, 'bx-')
-        ax.set_xlabel('Number of clusters (k)')
-        ax.set_ylabel('Inertia')
-        ax.set_title('Elbow Method For Optimal k')
+        # Automatically find the elbow point
+        knee = KneeLocator(K, inertia, curve='convex', direction='decreasing')
+        optimal_k = knee.knee
 
-        st.subheader("Elbow Method to Determine Optimal k for number of accidents")
-        st.pyplot(fig)
-                # Select number of clusters
-        k = st.slider("Select number of clusters (K)", min_value=1, max_value=10, value=3)
+        # Plot using Plotly
+        fig = go.Figure()
+        fig.add_trace(go.Scatter(x=list(K), y=inertia, mode='lines+markers', name='Inertia'))
+        fig.add_vline(x=optimal_k, line_dash='dash', line_color='red',
+                    annotation_text=f"Elbow at k={optimal_k}", annotation_position="top right")
+
+        fig.update_layout(
+            title="Elbow Method for Optimal k (Interactive)",
+            xaxis_title="Number of Clusters (k)",
+            yaxis_title="Inertia (Within-cluster sum of squares)",
+            hovermode='x unified'
+        )
+
+        # Display in Streamlit
+        st.subheader("Elbow Method to Determine Optimal k (Interactive)")
+        st.plotly_chart(fig)
+        st.success(f"✅ Automatically detected optimal number of clusters: **k = {optimal_k}**")
+                
+        
+        k = optimal_k
 
         # Perform KMeans clustering
         X = df[['Number of Accidents']]
         kmeans = KMeans(n_clusters=k, random_state=42)
         df['Cluster'] = kmeans.fit_predict(X)
-
-        # Display clustered data
-        st.subheader("Clustered Data")
-        st.dataframe(df)
 
         # Plot the clusters
         fig, ax = plt.subplots()
@@ -186,60 +203,55 @@ if page == "Alfonso":
 
         coords_deg = df[['Latitude', 'Longitude']].dropna().values
         
+       
         coords_rad = np.radians(coords_deg)
+        eps_rad = 0.1 / 6371.0  # 100 meters in radians (Earth radius in km)\
+        db = DBSCAN(eps=eps_rad, min_samples=3, metric='haversine')
 
-        # Streamlit slider to set min_samples
-        min_samples = 3 # 2+1
+        # Set min_samples for DBSCAN (k = min_samples - 1)
+        min_samples = 3  # 2+1 for core point
+        k = min_samples - 1
 
         # Compute k-distance
-        k = min_samples - 1
-        neighbors = NearestNeighbors(n_neighbors=min_samples, metric='haversine')
+        neighbors = NearestNeighbors(n_neighbors=k)
         neighbors_fit = neighbors.fit(coords_rad)
         distances, indices = neighbors_fit.kneighbors(coords_rad)
-        k_distances = np.sort(distances[:, k]) * 6371000  # Convert radians to meters
 
-        # Detect elbow using KneeLocator
+        k_distances = np.sort(distances[:, k - 1])
+
+        # Find the elbow point
         kneedle = KneeLocator(
-            x=range(len(k_distances)),
-            y=k_distances,
-            curve='convex',
-            direction='increasing'
+            range(len(k_distances)), k_distances,
+            curve="convex", direction="increasing"
         )
         elbow_index = kneedle.knee
-        elbow_eps = k_distances[elbow_index] if elbow_index is not None else None
+        elbow_value = k_distances[elbow_index] if elbow_index is not None else None
 
-        # Create interactive Plotly line chart
-        k_dist_df = pd.DataFrame({
-            'Point Index (Sorted)': np.arange(len(k_distances)),
-            'k-Distance (meters)': k_distances
-        })
-
-        fig = px.line(
-            k_dist_df,
-            x='Point Index (Sorted)',
-            y='k-Distance (meters)',
-            title='k-Distance Plot with Elbow Detection',
-            markers=True
-        )
-
-        # Mark the elbow point on the plot
+        # Plot
+        fig, ax = plt.subplots(figsize=(8, 5))
+        ax.plot(k_distances, label="k-distance")
         if elbow_index is not None:
-            fig.add_scatter(
-                x=[elbow_index],
-                y=[elbow_eps],
-                mode='markers+text',
-                marker=dict(color='red', size=10),
-                text=[f"Elbow @ {elbow_eps:.2f}m"],
-                textposition='top right',
-                name='Elbow Point'
-            )
-            st.success(f"Estimated optimal `eps` (in meters): **{elbow_eps:.2f}**")
-        else:
-            st.warning("No elbow point detected.")
+            ax.axvline(x=elbow_index, color='red', linestyle='--', label=f"Elbow at index {elbow_index}")
+            ax.axhline(y=elbow_value, color='orange', linestyle='--', label=f"Recommended ε ≈ {elbow_value:.4f}")
 
-        st.plotly_chart(fig)
+        ax.set_title("K-Distance Plot (Elbow = Optimal Epsilon for DBSCAN)")
+        ax.set_xlabel("Points (sorted)")
+        ax.set_ylabel(f"{k}th Nearest Neighbor Distance")
+        ax.legend()
+        ax.grid(True)
+
+        # Display plot
+        st.pyplot(fig)
+
+        # Show recommended epsilon
+        if elbow_value is not None:
+            st.success(f"✅ Recommended eps (epsilon) for DBSCAN: **{elbow_value:.4f}**")
+        else:
+            st.warning("⚠️ Elbow point not found. Try adjusting min_samples or check the data.")
         
         
+        
+####################### interactive map ##########################
         # Load data
         df = pd.read_csv("data/Alfonso/ALFONSO 2020 - 2024.csv")
         df = df.dropna(subset=["Latitude", "Longitude"])
@@ -248,7 +260,7 @@ if page == "Alfonso":
 
         st.subheader("DBSCAN Clustering")
 
-        eps_meters = st.slider("Epsilon (meters)", 0.1, 0.3, 5.0, step=0.1)
+        eps_meters = elbow_value
         min_sample = 3
         
 
@@ -413,34 +425,45 @@ elif page == "GMA":
         ################## K means clustering based on number of accidents ####################
         df = pd.read_csv("data/GMA/GMA total.csv")
         
-        # Elbow method to determine optimal k
+        # Elbow method data preparation
         X = df[['Number of Accidents']]
         inertia = []
         K = range(1, 10)
+
         for k in K:
             kmeans = KMeans(n_clusters=k, random_state=42)
             kmeans.fit(X)
             inertia.append(kmeans.inertia_)
 
-        fig, ax = plt.subplots()
-        ax.plot(K, inertia, 'bx-')
-        ax.set_xlabel('Number of clusters (k)')
-        ax.set_ylabel('Inertia')
-        ax.set_title('Elbow Method For Optimal k')
+        # Automatically find the elbow point
+        knee = KneeLocator(K, inertia, curve='convex', direction='decreasing')
+        optimal_k = knee.knee
 
-        st.subheader("Elbow Method to Determine Optimal k for number of accidents")
-        st.pyplot(fig)
-                # Select number of clusters
-        k = st.slider("Select number of clusters (K)", min_value=1, max_value=10, value=3)
+        # Plot using Plotly
+        fig = go.Figure()
+        fig.add_trace(go.Scatter(x=list(K), y=inertia, mode='lines+markers', name='Inertia'))
+        fig.add_vline(x=optimal_k, line_dash='dash', line_color='red',
+                    annotation_text=f"Elbow at k={optimal_k}", annotation_position="top right")
+
+        fig.update_layout(
+            title="Elbow Method for Optimal k (Interactive)",
+            xaxis_title="Number of Clusters (k)",
+            yaxis_title="Inertia (Within-cluster sum of squares)",
+            hovermode='x unified'
+        )
+
+        # Display in Streamlit
+        st.subheader("Elbow Method to Determine Optimal k (Interactive)")
+        st.plotly_chart(fig)
+        st.success(f"✅ Automatically detected optimal number of clusters: **k = {optimal_k}**")
+                
+        
+        k = optimal_k
 
         # Perform KMeans clustering
         X = df[['Number of Accidents']]
         kmeans = KMeans(n_clusters=k, random_state=42)
         df['Cluster'] = kmeans.fit_predict(X)
-
-        # Display clustered data
-        st.subheader("Clustered Data")
-        st.dataframe(df)
 
         # Plot the clusters
         fig, ax = plt.subplots()
@@ -458,7 +481,9 @@ elif page == "GMA":
         ax.legend()
         st.pyplot(fig)
         
-        
+#################################### DBSCAN ####################################
+
+
     elif tab == "DBSCAN":
         
         df = pd.read_csv("data/GMA/GMA 2020 - 2024.csv")
@@ -468,7 +493,7 @@ elif page == "GMA":
         coords_rad = np.radians(coords_deg)
 
         # Streamlit slider to set min_samples
-        min_samples = st.slider("Select min_samples (for DBSCAN)", min_value=2, max_value=10, value=4)
+        min_samples = 3 # 2+1
 
         # Compute k-distance
         k = min_samples - 1
@@ -734,34 +759,45 @@ elif page == "Carmona":
         ################## K means clustering based on number of accidents ####################
         df = pd.read_csv("data/Carmona/CARMONA total.csv")
         
-        # Elbow method to determine optimal k
+        # Elbow method data preparation
         X = df[['Number of Accidents']]
         inertia = []
         K = range(1, 8)
+
         for k in K:
             kmeans = KMeans(n_clusters=k, random_state=42)
             kmeans.fit(X)
             inertia.append(kmeans.inertia_)
 
-        fig, ax = plt.subplots()
-        ax.plot(K, inertia, 'bx-')
-        ax.set_xlabel('Number of clusters (k)')
-        ax.set_ylabel('Inertia')
-        ax.set_title('Elbow Method For Optimal k')
+        # Automatically find the elbow point
+        knee = KneeLocator(K, inertia, curve='convex', direction='decreasing')
+        optimal_k = knee.knee
 
-        st.subheader("Elbow Method to Determine Optimal k for number of accidents")
-        st.pyplot(fig)
-                # Select number of clusters
-        k = st.slider("Select number of clusters (K)", min_value=1, max_value=10, value=3)
+        # Plot using Plotly
+        fig = go.Figure()
+        fig.add_trace(go.Scatter(x=list(K), y=inertia, mode='lines+markers', name='Inertia'))
+        fig.add_vline(x=optimal_k, line_dash='dash', line_color='red',
+                    annotation_text=f"Elbow at k={optimal_k}", annotation_position="top right")
+
+        fig.update_layout(
+            title="Elbow Method for Optimal k (Interactive)",
+            xaxis_title="Number of Clusters (k)",
+            yaxis_title="Inertia (Within-cluster sum of squares)",
+            hovermode='x unified'
+        )
+
+        # Display in Streamlit
+        st.subheader("Elbow Method to Determine Optimal k (Interactive)")
+        st.plotly_chart(fig)
+        st.success(f"✅ Automatically detected optimal number of clusters: **k = {optimal_k}**")
+                
+        
+        k = optimal_k
 
         # Perform KMeans clustering
         X = df[['Number of Accidents']]
         kmeans = KMeans(n_clusters=k, random_state=42)
         df['Cluster'] = kmeans.fit_predict(X)
-
-        # Display clustered data
-        st.subheader("Clustered Data")
-        st.dataframe(df)
 
         # Plot the clusters
         fig, ax = plt.subplots()
@@ -791,7 +827,7 @@ elif page == "Carmona":
         coords_rad = np.radians(coords_deg)
 
         # Streamlit slider to set min_samples
-        min_samples = st.slider("Select min_samples (for DBSCAN)", min_value=2, max_value=10, value=4)
+        min_samples = 3 # 2+1
 
         # Compute k-distance
         k = min_samples - 1
