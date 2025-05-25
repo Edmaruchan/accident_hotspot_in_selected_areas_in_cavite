@@ -35,42 +35,6 @@ if page == "Alfonso":
 
         st.subheader("K-Means Clustering")
             
-########### Open streetmap ######################
-            
-        df = pd.read_csv("data/Alfonso/ALFONSO 2020 - 2024.csv")
-
-    # Drop rows with missing coordinates
-        df = df.dropna(subset=["Latitude", "Longitude"])
-
-    # Optional: Reset index
-        df = df.reset_index(drop=True)
-
-
-        k = 4 # d=2+1
-
-    # Prepare data for clustering
-        coords = df[['Latitude', 'Longitude']]
-
-    # Fit KMeans
-        kmeans = KMeans(n_clusters=k, random_state=0, n_init='auto')
-        df['Cluster'] = kmeans.fit_predict(coords)
-
-        custom_colors = px.colors.qualitative.Bold
-
-        # Plot with Plotly
-        fig_alfonso = px.scatter_mapbox(
-        df,
-        lat='Latitude',
-        lon='Longitude',
-        color='Cluster',
-        zoom=10,
-        mapbox_style='open-street-map',
-        title=f'K-Means Clustering of Road Accidents (k={k})'
-        )
-
-        st.plotly_chart(fig_alfonso)
-
-
         col1, col2 = st.columns(2)
         
         with col1:
@@ -133,6 +97,45 @@ if page == "Alfonso":
                             yaxis_title="Inertia")
 
             st.plotly_chart(fig_elbow_alfonso)
+            
+            
+########### Open streetmap ######################
+            
+        df = pd.read_csv("data/Alfonso/ALFONSO 2020 - 2024.csv")
+
+    # Drop rows with missing coordinates
+        df = df.dropna(subset=["Latitude", "Longitude"])
+
+    # Optional: Reset index
+        df = df.reset_index(drop=True)
+
+
+        k = 4 # d=2+1
+
+    # Prepare data for clustering
+        coords = df[['Latitude', 'Longitude']]
+
+    # Fit KMeans
+        kmeans = KMeans(n_clusters=k, random_state=0, n_init='auto')
+        df['Cluster'] = kmeans.fit_predict(coords)
+
+        custom_colors = px.colors.qualitative.Bold
+
+        # Plot with Plotly
+        fig_alfonso = px.scatter_mapbox(
+        df,
+        lat='Latitude',
+        lon='Longitude',
+        color='Cluster',
+        zoom=10,
+        mapbox_style='open-street-map',
+        title=f'K-Means Clustering of Road Accidents (k={k})'
+        )
+
+        st.plotly_chart(fig_alfonso)
+
+
+        
         
 ################## K means clustering based on number of accidents ####################
         df = pd.read_csv("data/Alfonso/ALFONSO total.csv")
@@ -158,14 +161,14 @@ if page == "Alfonso":
                     annotation_text=f"Elbow at k={optimal_k}", annotation_position="top right")
 
         fig.update_layout(
-            title="Elbow Method for Optimal k (Interactive)",
+            title="Elbow Method for Optimal k ",
             xaxis_title="Number of Clusters (k)",
             yaxis_title="Inertia (Within-cluster sum of squares)",
             hovermode='x unified'
         )
 
         # Display in Streamlit
-        st.subheader("Elbow Method to Determine Optimal k (Interactive)")
+        st.subheader("K-Means clustering based on Number of Accidents")
         st.plotly_chart(fig)
         st.success(f"✅ Automatically detected optimal number of clusters: **k = {optimal_k}**")
                 
@@ -200,97 +203,81 @@ if page == "Alfonso":
     elif tab == "DBSCAN":
         
         df = pd.read_csv("data/Alfonso/ALFONSO 2020 - 2024.csv")
-        
-        coords_deg = df[['Latitude', 'Longitude']].dropna().values
+        df = df.dropna(subset=["Latitude", "Longitude"])
+        coords = df[['Latitude', 'Longitude']].values
 
-        # Convert degrees to radians
-        coords_rad = np.radians(coords_deg)
+        # Streamlit UI
+        st.subheader("DBSCAN Clustering")
 
-        # Parameters
-        min_samples = 4
-        k = min_samples - 1
+        eps_meters = st.slider("Epsilon (meters)", 50, 1000, 300, step=50)
+        min_sample = st.slider("Min Samples", 2, 20, 4)
 
-        # K-Distance calculation
-        neighbors = NearestNeighbors(n_neighbors=k, metric='haversine')
-        neighbors_fit = neighbors.fit(coords_rad)
-        distances, _ = neighbors_fit.kneighbors(coords_rad)
+        # DBSCAN
+        coords_rad = np.radians(coords)
+        eps_rad = eps_meters / 6371000
+        db = DBSCAN(eps=eps_rad, min_samples=min_sample, metric='haversine')
+        df['cluster'] = db.fit_predict(coords_rad)
 
-        # Convert to meters and sort
-        k_distances_m = np.sort(distances[:, k - 1] * 6371000)
+        # Split data
+        clusters = df[df['cluster'] != -1]
+        noise = df[df['cluster'] == -1]
 
-        # Optional: remove top 5% to reduce outlier effects
-        cutoff = int(len(k_distances_m) * 0.95)
-        trimmed_distances = k_distances_m[:cutoff]
+        # Define custom colors (as many as you need)
+        custom_colors = [
+            '#1f77b4', '#ff7f0e', '#2ca02c', '#d62728', '#9467bd',
+            '#8c564b', '#e377c2', '#7f7f7f', '#bcbd22', '#17becf'
+        ]
 
-        # Elbow detection
-        kneedle = KneeLocator(
-            range(len(trimmed_distances)), trimmed_distances,
-            curve="convex", direction="increasing"
-        )
-        elbow_index = kneedle.knee
-        elbow_value = trimmed_distances[elbow_index] if elbow_index is not None else None
+        # Create Plotly Map
+        fig = go.Figure()
 
-        # Plot K-Distance using Plotly
-        fig1 = go.Figure()
-        fig1.add_trace(go.Scatter(y=k_distances_m, mode='lines', name='k-distance (m)'))
-
-        if elbow_index is not None:
-            fig1.add_vline(x=elbow_index, line_dash="dash", line_color="red", name="Elbow Index")
-            fig1.add_hline(y=elbow_value, line_dash="dash", line_color="orange", name="Elbow ε")
-            fig1.add_trace(go.Scatter(
-                x=[elbow_index], y=[elbow_value],
-                mode='markers+text',
-                marker=dict(color='red', size=8),
-                text=[f"ε ≈ {elbow_value:.2f} m"],
-                textposition="top right"
+        # Plot clusters
+        unique_clusters = clusters['cluster'].unique()
+        for i, cluster_id in enumerate(unique_clusters):
+            cluster_data = clusters[clusters['cluster'] == cluster_id]
+            fig.add_trace(go.Scattermapbox(
+                lat=cluster_data['Latitude'],
+                lon=cluster_data['Longitude'],
+                mode='markers',
+                marker=dict(size=8, color=custom_colors[i % len(custom_colors)]),
+                name=f'Cluster {cluster_id}',
+                hoverinfo='text',
+                text=[f'Cluster {cluster_id}'] * len(cluster_data)
             ))
 
-        fig1.update_layout(
-            title="📈 K-Distance Plot for DBSCAN Epsilon",
-            xaxis_title="Points (sorted)",
-            yaxis_title="3rd Nearest Neighbor Distance (m)",
-            height=400
+        # Plot noise as black X
+        if not noise.empty:
+            fig.add_trace(go.Scattermapbox(
+                lat=noise['Latitude'],
+                lon=noise['Longitude'],
+                mode='markers',
+                marker=dict(size=8, color='black'),
+                name='Noise',
+                hoverinfo='text',
+                text=['Noise'] * len(noise)
+            ))
+
+        fig.update_layout(
+            mapbox_style="open-street-map",
+            mapbox_zoom=11,
+            mapbox_center={"lat": df["Latitude"].mean(), "lon": df["Longitude"].mean()},
+            margin={"r":0,"t":40,"l":0,"b":0},
+            title="🗺️ DBSCAN Clustering"
         )
-        st.plotly_chart(fig1)
 
-        if elbow_value:
-            st.success(f"✅ Recommended eps (epsilon) for DBSCAN: **{elbow_value:.2f} meters**")
+        st.plotly_chart(fig)
 
-            # Apply DBSCAN
-            eps_rad = elbow_value / 6371000
-            db = DBSCAN(eps=eps_rad, min_samples=min_samples, metric='haversine')
-            df = df.dropna(subset=['Latitude', 'Longitude']).copy()
-            df['Cluster'] = db.fit_predict(np.radians(df[['Latitude', 'Longitude']]))
-
-            # Summary
-            n_clusters = len(set(df['Cluster'])) - (1 if -1 in df['Cluster'] else 0)
-            n_noise = (df['Cluster'] == -1).sum()
-            st.success(f"🧠 DBSCAN Result: {n_clusters} cluster(s), {n_noise} noise point(s).")
-
-            # Plot clusters using Plotly
-            fig2 = px.scatter_mapbox(
-                df,
-                lat="Latitude",
-                lon="Longitude",
-                color=df['Cluster'].astype(str),
-                hover_data=["Cluster"],
-                zoom=11,
-                height=600,
-                title="🗺️ DBSCAN Clustering (Interactive Map)"
-            )
-            fig2.update_layout(mapbox_style="open-street-map")
-            st.plotly_chart(fig2)
-        else:
-            st.warning("⚠️ Elbow not detected. Try adjusting the data or min_samples.")
-
+        # Stats
+        n_clusters = len(unique_clusters)
+        n_noise = len(noise)
+        st.write(f"✅ Detected Clusters: {n_clusters}")
+        st.write(f"❌ Noise Points: {n_noise}")
+        
                 
                 
 ######################### GMA ###############################
 
 elif page == "GMA":
-
-
-
 
 
     st.write("Clustering in GMA")
@@ -458,169 +445,76 @@ elif page == "GMA":
         
         df = pd.read_csv("data/GMA/GMA 2020 - 2024.csv")
 
-        coords_deg = df[['Latitude', 'Longitude']].dropna().values
-        
-        coords_rad = np.radians(coords_deg)
-
-        # Streamlit slider to set min_samples
-        min_samples = 3 # 2+1
-
-        # Compute k-distance
-        k = min_samples - 1
-        neighbors = NearestNeighbors(n_neighbors=min_samples, metric='haversine')
-        neighbors_fit = neighbors.fit(coords_rad)
-        distances, indices = neighbors_fit.kneighbors(coords_rad)
-        k_distances = np.sort(distances[:, k]) * 6371000  # Convert radians to meters
-
-        # Detect elbow using KneeLocator
-        kneedle = KneeLocator(
-            x=range(len(k_distances)),
-            y=k_distances,
-            curve='convex',
-            direction='increasing'
-        )
-        elbow_index = kneedle.knee
-        elbow_eps = k_distances[elbow_index] if elbow_index is not None else None
-
-        # Create interactive Plotly line chart
-        k_dist_df = pd.DataFrame({
-            'Point Index (Sorted)': np.arange(len(k_distances)),
-            'k-Distance (meters)': k_distances
-        })
-
-        fig = px.line(
-            k_dist_df,
-            x='Point Index (Sorted)',
-            y='k-Distance (meters)',
-            title='k-Distance Plot with Elbow Detection',
-            markers=True
-        )
-
-        # Mark the elbow point on the plot
-        if elbow_index is not None:
-            fig.add_scatter(
-                x=[elbow_index],
-                y=[elbow_eps],
-                mode='markers+text',
-                marker=dict(color='red', size=10),
-                text=[f"Elbow @ {elbow_eps:.2f}m"],
-                textposition='top right',
-                name='Elbow Point'
-            )
-            st.success(f"Estimated optimal `eps` (in meters): **{elbow_eps:.2f}**")
-        else:
-            st.warning("No elbow point detected.")
-
-        st.plotly_chart(fig)
-        
-        
-        df = pd.read_csv("data/GMA/GMA 2020 - 2024.csv")
-        
         df = df.dropna(subset=["Latitude", "Longitude"])
-
         coords = df[['Latitude', 'Longitude']].values
 
+        # Streamlit UI
         st.subheader("DBSCAN Clustering")
 
-        eps_meters = st.slider("Epsilon (meters)", 0.1, 0.3, 0.9, step=0.1)
+        eps_meters = st.slider("Epsilon (meters)", 50, 1000, 300, step=50)
         min_sample = st.slider("Min Samples", 2, 20, 4)
-        
 
-        # DBSCAN parameters
+        # DBSCAN
         coords_rad = np.radians(coords)
-        #eps_rad = eps_meters / 6371.0  # Earth radius in km
-
-        
-        eps_rad = eps_meters / 6371.0  # 300 meters in radians
+        eps_rad = eps_meters / 6371000
         db = DBSCAN(eps=eps_rad, min_samples=min_sample, metric='haversine')
         df['cluster'] = db.fit_predict(coords_rad)
 
-        # Separate clusters and noise
+        # Split data
         clusters = df[df['cluster'] != -1]
         noise = df[df['cluster'] == -1]
 
-        # Plotting
-        fig, ax = plt.subplots(figsize=(8, 6))
+        # Define custom colors (as many as you need)
+        custom_colors = [
+            '#1f77b4', '#ff7f0e', '#2ca02c', '#d62728', '#9467bd',
+            '#8c564b', '#e377c2', '#7f7f7f', '#bcbd22', '#17becf'
+        ]
+
+        # Create Plotly Map
+        fig = go.Figure()
 
         # Plot clusters
         unique_clusters = clusters['cluster'].unique()
-        colors = plt.cm.tab20(np.linspace(0, 1, len(unique_clusters)))
-        handles = []
-
         for i, cluster_id in enumerate(unique_clusters):
             cluster_data = clusters[clusters['cluster'] == cluster_id]
-            ax.scatter(cluster_data['Longitude'], cluster_data['Latitude'], 
-                    c=[colors[i]], s=10, label=f'Cluster {cluster_id}')
-            handles.append(mpatches.Patch(color=colors[i], label=f'Cluster {cluster_id}'))
+            fig.add_trace(go.Scattermapbox(
+                lat=cluster_data['Latitude'],
+                lon=cluster_data['Longitude'],
+                mode='markers',
+                marker=dict(size=8, color=custom_colors[i % len(custom_colors)]),
+                name=f'Cluster {cluster_id}',
+                hoverinfo='text',
+                text=[f'Cluster {cluster_id}'] * len(cluster_data)
+            ))
 
-        # Plot noise points
+        # Plot noise as black X
         if not noise.empty:
-            ax.scatter(noise['Longitude'], noise['Latitude'], 
-                    c='gray', s=10, marker='x', label='Noise')
-            handles.append(mpatches.Patch(color='gray', label='Noise'))
+            fig.add_trace(go.Scattermapbox(
+                lat=noise['Latitude'],
+                lon=noise['Longitude'],
+                mode='markers',
+                marker=dict(size=8, color='black'),
+                name='Noise',
+                hoverinfo='text',
+                text=['Noise'] * len(noise)
+            ))
 
-        # Legend
-        ax.legend(handles=handles, title="Clusters", loc='lower right', fontsize=8, title_fontsize=9)
+        fig.update_layout(
+            mapbox_style="open-street-map",
+            mapbox_zoom=11,
+            mapbox_center={"lat": df["Latitude"].mean(), "lon": df["Longitude"].mean()},
+            margin={"r":0,"t":40,"l":0,"b":0},
+            title="🗺️ DBSCAN Clustering"
+        )
 
-        # Axis labels and grid
-        ax.set_title("DBSCAN Clustering")
-        ax.set_xlabel("Longitude")
-        ax.set_ylabel("Latitude")
-        ax.grid(True)
+        st.plotly_chart(fig)
 
-        # Show in Streamlit
-        st.pyplot(fig)
-        
-        st.write(f"Detected Clusters: {df['cluster'].nunique() - (1 if -1 in df['cluster'].unique() else 0)}")
-        st.write(f"Noise Points: {(df['cluster'] == -1).sum()}")
+        # Stats
+        n_clusters = len(unique_clusters)
+        n_noise = len(noise)
+        st.write(f"✅ Detected Clusters: {n_clusters}")
+        st.write(f"❌ Noise Points: {n_noise}")
                         
-
-        df = pd.read_csv("data/GMA/GMA total.csv")
-        
-                # Select number of clusters
-        k = st.slider("Select number of clusters (K)", min_value=1, max_value=10, value=3)
-
-        # Perform KMeans clustering
-        X = df[['Number of Accidents']]
-        kmeans = KMeans(n_clusters=k, random_state=42)
-        df['Cluster'] = kmeans.fit_predict(X)
-
-        # Display clustered data
-        st.subheader("Clustered Data")
-        st.dataframe(df)
-
-        # Plot the clusters
-        fig, ax = plt.subplots()
-        colors = ['red', 'blue', 'green', 'purple', 'orange', 'cyan', 'magenta', 'yellow', 'gray', 'brown']
-        for cluster in range(k):
-            cluster_data = df[df['Cluster'] == cluster]
-            ax.scatter(cluster_data['Barangay'], cluster_data['Number of Accidents'],
-                    color=colors[cluster % len(colors)],
-                    label=f'Cluster {cluster}', s=100)
-
-        ax.set_xlabel("Barangay")
-        ax.set_ylabel("Number of Accidents")
-        ax.set_title("KMeans Clustering of Barangays")
-        ax.tick_params(axis='x', rotation=90)
-        ax.legend()
-        st.pyplot(fig)
-        
-        # Elbow method to determine optimal k
-        inertia = []
-        K = range(1, 10)
-        for k in K:
-            kmeans = KMeans(n_clusters=k, random_state=42)
-            kmeans.fit(X)
-            inertia.append(kmeans.inertia_)
-
-        fig, ax = plt.subplots()
-        ax.plot(K, inertia, 'bx-')
-        ax.set_xlabel('Number of clusters (k)')
-        ax.set_ylabel('Inertia')
-        ax.set_title('Elbow Method For Optimal k')
-
-        st.subheader("Elbow Method to Determine Optimal k")
-        st.pyplot(fig)
         
 elif page == "Carmona":
 
@@ -792,118 +686,72 @@ elif page == "Carmona":
     
         df = pd.read_csv("data/Carmona/CARMONA 2020 - 2024.csv")
 
-        coords_deg = df[['Latitude', 'Longitude']].dropna().values
-        
-        coords_rad = np.radians(coords_deg)
-
-        # Streamlit slider to set min_samples
-        min_samples = 3 # 2+1
-
-        # Compute k-distance
-        k = min_samples - 1
-        neighbors = NearestNeighbors(n_neighbors=min_samples, metric='haversine')
-        neighbors_fit = neighbors.fit(coords_rad)
-        distances, indices = neighbors_fit.kneighbors(coords_rad)
-        k_distances = np.sort(distances[:, k]) * 6371000  # Convert radians to meters
-
-        # Detect elbow using KneeLocator
-        kneedle = KneeLocator(
-            x=range(len(k_distances)),
-            y=k_distances,
-            curve='convex',
-            direction='increasing'
-        )
-        elbow_index = kneedle.knee
-        elbow_eps = k_distances[elbow_index] if elbow_index is not None else None
-
-        # Create interactive Plotly line chart
-        k_dist_df = pd.DataFrame({
-            'Point Index (Sorted)': np.arange(len(k_distances)),
-            'k-Distance (meters)': k_distances
-        })
-
-        fig = px.line(
-            k_dist_df,
-            x='Point Index (Sorted)',
-            y='k-Distance (meters)',
-            title='k-Distance Plot with Elbow Detection',
-            markers=True
-        )
-
-        # Mark the elbow point on the plot
-        if elbow_index is not None:
-            fig.add_scatter(
-                x=[elbow_index],
-                y=[elbow_eps],
-                mode='markers+text',
-                marker=dict(color='red', size=10),
-                text=[f"Elbow @ {elbow_eps:.2f}m"],
-                textposition='top right',
-                name='Elbow Point'
-            )
-            st.success(f"Estimated optimal `eps` (in meters): **{elbow_eps:.2f}**")
-        else:
-            st.warning("No elbow point detected.")
-
-        st.plotly_chart(fig)
-        
-        
-        df = pd.read_csv("data/Carmona/CARMONA 2020 - 2024.csv")
-        
         df = df.dropna(subset=["Latitude", "Longitude"])
-
         coords = df[['Latitude', 'Longitude']].values
 
+        # Streamlit UI
         st.subheader("DBSCAN Clustering")
 
-        eps_meters = st.slider("Epsilon (meters)", 0.1, 0.3, 0.9, step=0.1)
+        eps_meters = st.slider("Epsilon (meters)", 50, 1000, 300, step=50)
         min_sample = st.slider("Min Samples", 2, 20, 4)
-        
 
-        # DBSCAN parameters
+        # DBSCAN
         coords_rad = np.radians(coords)
-        #eps_rad = eps_meters / 6371.0  # Earth radius in km
-
-        
-        eps_rad = eps_meters / 6371.0  # 300 meters in radians
+        eps_rad = eps_meters / 6371000
         db = DBSCAN(eps=eps_rad, min_samples=min_sample, metric='haversine')
         df['cluster'] = db.fit_predict(coords_rad)
 
-        # Separate clusters and noise
+        # Split data
         clusters = df[df['cluster'] != -1]
         noise = df[df['cluster'] == -1]
 
-        # Plotting
-        fig, ax = plt.subplots(figsize=(8, 6))
+        # Define custom colors (as many as you need)
+        custom_colors = [
+            '#1f77b4', '#ff7f0e', '#2ca02c', '#d62728', '#9467bd',
+            '#8c564b', '#e377c2', '#7f7f7f', '#bcbd22', '#17becf'
+        ]
+
+        # Create Plotly Map
+        fig = go.Figure()
 
         # Plot clusters
         unique_clusters = clusters['cluster'].unique()
-        colors = plt.cm.tab20(np.linspace(0, 1, len(unique_clusters)))
-        handles = []
-
         for i, cluster_id in enumerate(unique_clusters):
             cluster_data = clusters[clusters['cluster'] == cluster_id]
-            ax.scatter(cluster_data['Longitude'], cluster_data['Latitude'], 
-                    c=[colors[i]], s=10, label=f'Cluster {cluster_id}')
-            handles.append(mpatches.Patch(color=colors[i], label=f'Cluster {cluster_id}'))
+            fig.add_trace(go.Scattermapbox(
+                lat=cluster_data['Latitude'],
+                lon=cluster_data['Longitude'],
+                mode='markers',
+                marker=dict(size=8, color=custom_colors[i % len(custom_colors)]),
+                name=f'Cluster {cluster_id}',
+                hoverinfo='text',
+                text=[f'Cluster {cluster_id}'] * len(cluster_data)
+            ))
 
-        # Plot noise points
+        # Plot noise as black X
         if not noise.empty:
-            ax.scatter(noise['Longitude'], noise['Latitude'], 
-                    c='gray', s=10, marker='x', label='Noise')
-            handles.append(mpatches.Patch(color='gray', label='Noise'))
+            fig.add_trace(go.Scattermapbox(
+                lat=noise['Latitude'],
+                lon=noise['Longitude'],
+                mode='markers',
+                marker=dict(size=8, color='black'),
+                name='Noise',
+                hoverinfo='text',
+                text=['Noise'] * len(noise)
+            ))
 
-        # Legend
-        ax.legend(handles=handles, title="Clusters", loc='lower right', fontsize=8, title_fontsize=9)
+        fig.update_layout(
+            mapbox_style="open-street-map",
+            mapbox_zoom=11,
+            mapbox_center={"lat": df["Latitude"].mean(), "lon": df["Longitude"].mean()},
+            margin={"r":0,"t":40,"l":0,"b":0},
+            title="🗺️ DBSCAN Clustering"
+        )
 
-        # Axis labels and grid
-        ax.set_title("DBSCAN Clustering")
-        ax.set_xlabel("Longitude")
-        ax.set_ylabel("Latitude")
-        ax.grid(True)
+        st.plotly_chart(fig)
 
-        # Show in Streamlit
-        st.pyplot(fig)
-        
-        st.write(f"Detected Clusters: {df['cluster'].nunique() - (1 if -1 in df['cluster'].unique() else 0)}")
-        st.write(f"Noise Points: {(df['cluster'] == -1).sum()}")
+        # Stats
+        n_clusters = len(unique_clusters)
+        n_noise = len(noise)
+        st.write(f"✅ Detected Clusters: {n_clusters}")
+        st.write(f"❌ Noise Points: {n_noise}")
