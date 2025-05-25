@@ -248,7 +248,7 @@ if page == "Alfonso":
 
         st.subheader("DBSCAN Clustering")
 
-        eps_meters = st.slider("Epsilon (meters)", 0.1, 0.3, 0.9, step=0.1)
+        eps_meters = st.slider("Epsilon (meters)", 0.1, 0.3, 5.0, step=0.1)
         min_sample = 3
         
 
