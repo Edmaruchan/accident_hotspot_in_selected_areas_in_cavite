@@ -10,6 +10,7 @@ from PIL import Image
 from sklearn.neighbors import NearestNeighbors
 import pyproj
 from kneed import KneeLocator
+import plotly.graph_objects as go
 
 
 st.title("Road Accident Analysis in Cavite")
@@ -78,41 +79,99 @@ if page == "Overview":
   )
 
   st.plotly_chart(fig, use_container_width=False)
+        
+################ YEARLY DISTRIBUTION OF ACCIDENTS USING PLOTLY ##################        
 
-  df = pd.read_csv("data/GMA/GMA 2020 - 2024.csv")
+  gma_path = "data/GMA/GMA 2020 - 2024.csv"
+  alfonso_path = "data/Alfonso/ALFONSO 2020 - 2024.csv"
+  carmona_path = "data/Carmona/CARMONA 2020 - 2024.csv"
 
-    
-  st.title("🟢 Simple k-Distance Plot for DBSCAN")
+     # Function to load and process each file
+  def load_yearly_counts(path):
+      
+    df = pd.read_csv(path, parse_dates=['Date'])
+    df['Year'] = df['Date'].dt.year
+    return df.groupby('Year').size().reset_index(name='accidents')
 
-  df = pd.read_csv("data/ALL.csv")
-  df.columns = df.columns.str.lower()
+        # Load and process
+  gma_df = load_yearly_counts(gma_path)
+  alfonso_df = load_yearly_counts(alfonso_path)
+  carmona_df = load_yearly_counts(carmona_path)
 
-  if 'latitude' in df.columns and 'longitude' in df.columns:
-        df = df.dropna(subset=['latitude', 'longitude'])
+        # Plot using Plotly
+  fig = go.Figure()
 
-        # Convert lat/lon to meters using PRS92
-        transformer = pyproj.Transformer.from_crs("epsg:4326", "epsg:3123", always_xy=True)
-        x_m, y_m = transformer.transform(df['longitude'].values, df['latitude'].values)
-        coords = np.column_stack((x_m, y_m))
+  fig.add_trace(go.Scatter(x=gma_df['Year'], y=gma_df['accidents'],
+    mode='lines+markers', name='GMA', line=dict(color='red')))
 
-        # MinPts slider
-        k = st.slider("Select min_samples (k)", 2, 20, 5)
+  fig.add_trace(go.Scatter(x=alfonso_df['Year'], y=alfonso_df['accidents'],
+    mode='lines+markers', name='Alfonso', line=dict(color='green')))
 
-        # Compute k-distances
-        nn = NearestNeighbors(n_neighbors=k).fit(coords)
-        distances, _ = nn.kneighbors(coords)
-        k_distances = np.sort(distances[:, k - 1])
+  fig.add_trace(go.Scatter(x=carmona_df['Year'], y=carmona_df['accidents'],
+                                mode='lines+markers', name='Carmona', line=dict(color='blue')))
+
+        # Customize layout
+  fig.update_layout(
+            title="Yearly Road Accident Distribution (2020–2024)",
+            xaxis_title="Year",
+            yaxis_title="Number of Accidents",
+            legend_title="Municipality",
+            template="plotly_white"
+        )
+
+        # Show Plotly figure in Streamlit
+  st.plotly_chart(fig, use_container_width=True)
+        
+        
+################## MONTHLY DISTRIBUTION OF ACCIDENTS ##################
+
+  st.title("📆 Monthly Accident Trends Over Years (One Municipality)")
+
+        # File paths (you can replace these or use a dropdown)
+  municipality_options = {
+            "GMA": "data/GMA/GMA 2020 - 2024.csv",
+            "Alfonso": "data/Alfonso/ALFONSO 2020 - 2024.csv",
+            "Carmona": "data/Carmona/CARMONA 2020 - 2024.csv"
+        }
+
+  selected_municipality = st.selectbox("Select Municipality", list(municipality_options.keys()))
+  path = municipality_options[selected_municipality]
+
+        # Load and process data
+  df = pd.read_csv(path, parse_dates=['Date'])
+  df['year'] = df['Date'].dt.year
+  df['month_name'] = df['Date'].dt.strftime('%B')
+  df['month_num'] = df['Date'].dt.month
+
+        # Group by year and month
+  monthly_trend = df.groupby(['year', 'month_num', 'month_name']).size().reset_index(name='accidents')
+  monthly_trend.sort_values(by=['month_num', 'year'], inplace=True)
 
         # Plot
-        fig, ax = plt.subplots()
-        ax.plot(k_distances)
-        ax.set_title("k-Distance Plot")
-        ax.set_xlabel("Points sorted by distance")
-        ax.set_ylabel(f"Distance to {k}th Nearest Neighbor (meters)")
-        ax.grid(True)
+  fig = go.Figure()
 
-        st.pyplot(fig)
-        st.info("📌 Look for the 'elbow' in the curve to choose your `eps` value.")
+        # Loop through each month to create a line
+  for month_num in range(1, 13):
+            month_df = monthly_trend[monthly_trend['month_num'] == month_num]
+            fig.add_trace(go.Scatter(
+                x=month_df['year'],
+                y=month_df['accidents'],
+                mode='lines+markers',
+                name=month_df['month_name'].iloc[0]
+            ))
+
+        # Layout
+  fig.update_layout(
+            title=f"Monthly Accident Trends by Year ({selected_municipality})",
+            xaxis_title="Year",
+            yaxis_title="Number of Accidents",
+            legend_title="Month",
+            template="plotly_white"
+        )
+
+  st.plotly_chart(fig, use_container_width=True)
+############# ALFONSO ############
+
   
 elif page == "Alfonso":
     st.subheader("Alfonso Analysis")
@@ -570,51 +629,6 @@ elif page == "Carmona":
         title='Total Accidents Per Month (2020–2024)'
         )
         st.plotly_chart(fig)
-# Sidebar – Controls
-st.sidebar.title("Display Options")
-show_clustering = st.sidebar.checkbox("Enable Interactive Clustering")
-
-if show_clustering:
-    method = st.sidebar.radio("Select Clustering Method", ["DBSCAN", "KMeans"])
-    if method == "KMeans":
-        k = st.sidebar.slider("Number of Clusters", min_value=1, max_value=10, value=3)
-    
-    if st.button("Run Clustering"):
-        # Load data and define coords
-        #df = pd.read_csv("data/Alfonso/ALFONSO 2020 - 2024.csv")
-       # df = pd.read_csv("data/Carmona/CARMONA 2020 - 2024.csv")
-        df = pd.read_csv("data/GMA/GMA 2020 - 2024.csv")
-        coords = df[['Latitude', 'Longitude']].values
-
-        if method == "DBSCAN":
-            st.subheader("DBSCAN Clustering")
-            coords_rad = np.radians(coords)
-            eps_rad = 0.3 / 6371.0  # 300 meters
-            db = DBSCAN(eps=eps_rad, min_samples=4, metric='haversine')
-            df['cluster'] = db.fit_predict(coords_rad)
-
-            fig, ax = plt.subplots(figsize=(8, 6))
-            scatter = ax.scatter(df['Longitude'], df['Latitude'], c=df['cluster'], cmap='tab20', s=10)
-            ax.set_title("DBSCAN Clustering of Road Accidents in 3 selected municipalities")
-            ax.set_xlabel("Longitude")
-            ax.set_ylabel("Latitude")
-            ax.grid(True)
-            st.pyplot(fig)
-
-        elif method == "KMeans":
-            st.subheader("KMeans Clustering")
-            kmeans = KMeans(n_clusters=k, random_state=42)
-            df['cluster'] = kmeans.fit_predict(coords)
-            centers = kmeans.cluster_centers_
-
-            st.write("Cluster Counts:", df['cluster'].value_counts())
-
-            fig, ax = plt.subplots(figsize=(8, 6))
-            ax.scatter(df['Longitude'], df['Latitude'], c=df['cluster'], cmap='tab10', s=10)
-            ax.scatter(centers[:, 1], centers[:, 0], c='black', marker='x', s=100, label='Centroids')
-            ax.set_title(f"K-Means Clustering (k={k}) with Centroids")
-            ax.set_xlabel("Longitude")
-            ax.set_ylabel("Latitude")
-            ax.legend()
-            ax.grid(True)
-            st.pyplot(fig)
+            
+            
+            
