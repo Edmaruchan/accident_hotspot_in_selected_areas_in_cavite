@@ -136,7 +136,7 @@ if page == "Overview":
             "Carmona": "data/Carmona/CARMONA 2020 - 2024.csv"
         }
 
-  selected_municipality = st.radio("Select Municipality", list(municipality_options.keys()))
+  selected_municipality = st.radio("Select Municipality", list(municipality_options.keys()), key="municipality_selection1")
   path = municipality_options[selected_municipality]
 
         # Load and process data
@@ -175,7 +175,7 @@ if page == "Overview":
   
   
   
-  ############ weekly trend in Alfonso ############
+  ############ WEEKLY DISTRIBUTION OF ACCIDENTS ############
   
   st.title("Weekly Accident Trends by Year")
   
@@ -187,7 +187,7 @@ if page == "Overview":
 }
 
 # Radio button for municipality selection
-  selected_municipality = st.radio("Select Municipality", list(municipality_options.keys()))
+  selected_municipality = st.radio("Select Municipality", list(municipality_options.keys()), key="municipality_selection2")
 
 # Load corresponding CSV
   path = municipality_options[selected_municipality]
@@ -208,6 +208,64 @@ if page == "Overview":
     labels={'Total Accidents': 'Total Accidents', 'Year': 'Year'}
 )
 
+  st.plotly_chart(fig, use_container_width=True)
+  
+  
+  
+############# TIME OF DAY DISTRIBUTION OF ACCIDENTS ############
+
+  municipality_options = {
+    "Alfonso": "data/Alfonso/ALFONSO 2020 - 2024.csv",
+    "GMA": "data/GMA/GMA 2020 - 2024.csv",
+    "Carmona": "data/Carmona/CARMONA 2020 - 2024.csv"
+}
+  
+  df.columns = df.columns.str.strip()
+
+
+# --- Select Municipality ---
+  selected_municipality = st.radio("Select Municipality", list(municipality_options.keys()), key="municipality_selection3")
+  file_path = municipality_options[selected_municipality]
+
+# --- Load Data ---
+  df = pd.read_csv(file_path)
+  df.columns = df.columns.str.strip()  # removes leading/trailing spaces from column names
+  
+# --- Preprocess ---
+  df['Time'] = pd.to_datetime(df['Time'], format='%H:%M:%S', errors='coerce').dt.time  # Ensure time parsed correctly
+
+  def categorize_time(t):
+    if pd.isna(t):
+        return None
+    if t >= pd.to_datetime('00:00').time() and t <= pd.to_datetime('05:59').time():
+        return 'EARLY MORNING'
+    elif t >= pd.to_datetime('06:00').time() and t <= pd.to_datetime('11:59').time():
+        return 'MORNING'
+    elif t >= pd.to_datetime('13:00').time() and t <= pd.to_datetime('17:59').time():
+        return 'AFTERNOON'
+    elif t >= pd.to_datetime('18:00').time() and t <= pd.to_datetime('23:59').time():
+        return 'EVENING'
+    else:
+        return 'NOON'  # Covers 12:00 to 12:59
+
+  df['Time of Day'] = df['Time'].apply(categorize_time)
+
+# --- Group and Prepare for Plotting ---
+  time_order = ['EARLY MORNING', 'MORNING', 'NOON', 'AFTERNOON', 'EVENING']
+  grouped = df.groupby(['Year', 'Time of Day']).size().reset_index(name='Total Accidents')
+  grouped['Time of Day'] = pd.Categorical(grouped['Time of Day'], categories=time_order, ordered=True)
+
+# --- Plot ---
+  fig = px.line(
+    grouped,
+    x='Year',
+    y='Total Accidents',
+    color='Time of Day',
+    markers=True,
+    title=f'Time of Day Accident Trends by Year in {selected_municipality}'
+)
+
+  st.subheader(f"Time of Day Accident Trends by Year – {selected_municipality}")
   st.plotly_chart(fig, use_container_width=True)
   
 ############# ALFONSO ############
