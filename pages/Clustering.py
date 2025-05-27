@@ -16,6 +16,8 @@ import matplotlib.patches as mpatches
 import folium
 from streamlit_folium import st_folium
 from sklearn import metrics
+from sklearn.metrics import silhouette_score
+
 
 
 
@@ -221,9 +223,8 @@ if page == "Alfonso":
         df = pd.read_csv("data/Alfonso/ALFONSO 2020 - 2024.csv")
         coords = df[['Latitude', 'Longitude']]
 
-
-        
-        eps = st.slider("Epsilon (distance threshold)", 0.01, 1.0, 0.1, step=0.01)
+        # Streamlit sliders
+        eps = st.slider("Epsilon (distance threshold)", 0.01, 5.0, 0.1, step=0.01)
         min_samples = st.slider("Min Samples (points per cluster)", 1, 20, 5)
 
         # Standardize coordinates
@@ -234,10 +235,18 @@ if page == "Alfonso":
         db = DBSCAN(eps=eps, min_samples=min_samples)
         df['cluster'] = db.fit_predict(coords_scaled)
 
-       
+        # ✅ Compute silhouette score only if ≥2 clusters (excluding noise)
+        labels = df['cluster']
+        n_clusters = len(set(labels)) - (1 if -1 in labels.values else 0)
+
+        if n_clusters >= 2:
+            sil_score = silhouette_score(coords_scaled, labels)
+            st.success(f"Silhouette Score: **{sil_score:.4f}**")
+        else:
+            st.warning("Silhouette score requires at least 2 clusters (excluding noise).")
 
         # Create Folium map
-        m = folium.Map(location=[df['Latitude'].mean(), df['Longitude'].mean()], zoom_start=13)
+        m = folium.Map(location=[df['Latitude'].mean(), df['Longitude'].mean()], zoom_start=12)
 
         # Define colors for clusters
         cluster_colors = ['red', 'blue', 'green', 'purple', 'orange', 'darkred', 'lightblue', 'darkgreen', 'gray']
@@ -256,15 +265,9 @@ if page == "Alfonso":
                 popup=f"Cluster: {cluster}"
             ).add_to(m)
 
-        # Show map in Streamlit
+        # Show map
         st.subheader("Interactive Cluster Map")
         st_folium(m, width=700, height=500)
-        
-         # Display results
-        st.subheader("Clustered Data")
-        st.write(df)
-        df['labels'] 
-        metrics.silhouette_score(df, df['labels'])
 
         
         
