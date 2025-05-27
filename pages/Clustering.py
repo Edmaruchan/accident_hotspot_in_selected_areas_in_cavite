@@ -448,7 +448,9 @@ elif page == "GMA":
             title="KMeans Clustering of Barangays based on Number of Accidents",
             xaxis_title="Number of Accidents",
             yaxis_title="Barangay",
-            template="plotly_white"
+            template="plotly_white",
+            width=800,
+            height=800
         )
 
         st.subheader("KMeans Clustering of Barangays based on Number of Accidents")

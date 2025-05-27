@@ -81,7 +81,9 @@ if page == "Overview":
   st.plotly_chart(fig, use_container_width=False)
         
 ################ YEARLY DISTRIBUTION OF ACCIDENTS USING PLOTLY ##################        
-
+  
+  st.title("Yearly Accident Trends (2020–2024)")
+  
   gma_path = "data/GMA/GMA 2020 - 2024.csv"
   alfonso_path = "data/Alfonso/ALFONSO 2020 - 2024.csv"
   carmona_path = "data/Carmona/CARMONA 2020 - 2024.csv"
@@ -125,7 +127,7 @@ if page == "Overview":
         
 ################## MONTHLY DISTRIBUTION OF ACCIDENTS ##################
 
-  st.title("📆 Monthly Accident Trends Over Years (One Municipality)")
+  st.title("Monthly Accident Trends Per Year")
 
         # File paths (you can replace these or use a dropdown)
   municipality_options = {
@@ -134,7 +136,7 @@ if page == "Overview":
             "Carmona": "data/Carmona/CARMONA 2020 - 2024.csv"
         }
 
-  selected_municipality = st.selectbox("Select Municipality", list(municipality_options.keys()))
+  selected_municipality = st.radio("Select Municipality", list(municipality_options.keys()))
   path = municipality_options[selected_municipality]
 
         # Load and process data
@@ -162,7 +164,7 @@ if page == "Overview":
 
         # Layout
   fig.update_layout(
-            title=f"Monthly Accident Trends by Year ({selected_municipality})",
+            title=f"Monthly Accident Trends by Year:  {selected_municipality}",
             xaxis_title="Year",
             yaxis_title="Number of Accidents",
             legend_title="Month",
@@ -170,6 +172,44 @@ if page == "Overview":
         )
 
   st.plotly_chart(fig, use_container_width=True)
+  
+  
+  
+  ############ weekly trend in Alfonso ############
+  
+  st.title("Weekly Accident Trends by Year")
+  
+  municipality_options = {
+    "Alfonso": "data/Alfonso/ALFONSO weekly 2020 - 2024.csv",
+    "GMA": "data/GMA/GMA weekly 2020 - 2024.csv",
+    "Carmona": "data/Carmona/CARMONA weekly 2020 - 2024.csv"
+    
+}
+
+# Radio button for municipality selection
+  selected_municipality = st.radio("Select Municipality", list(municipality_options.keys()))
+
+# Load corresponding CSV
+  path = municipality_options[selected_municipality]
+  df = pd.read_csv(path)
+
+# Ensure proper order of days
+  days_order = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday']
+  df['Day'] = pd.Categorical(df['Day'], categories=days_order, ordered=True)
+
+# Plot line chart
+  fig = px.line(
+    df,
+    x='Year',
+    y='Total Accidents',
+    color='Day',
+    markers=True,
+    title=f'Weekly Accident Trends per Year:  {selected_municipality}',
+    labels={'Total Accidents': 'Total Accidents', 'Year': 'Year'}
+)
+
+  st.plotly_chart(fig, use_container_width=True)
+  
 ############# ALFONSO ############
 
   
@@ -629,6 +669,7 @@ elif page == "Carmona":
         title='Total Accidents Per Month (2020–2024)'
         )
         st.plotly_chart(fig)
-            
+
+
             
             
