@@ -15,16 +15,13 @@ import plotly.graph_objects as go
 
 st.title("Road Accident Analysis in Cavite")
 
-
-# Sidebar or top menu
 st.subheader("Welcome to the Road Accident Dashboard")
-st.write("Select a municipality to view clustering results and maps.")
+st.write("Select a municipality to view results and maps.")
 page = st.radio("Select Area", ["Overview", "Alfonso", "GMA", "Carmona"])
 
 # Pages
 if page == "Overview":
-  st.write("")
-  st.subheader("Road Accident Hotspot Maps")
+ 
   df = pd.read_csv("data/ALL.csv")
 
   # Count the number of accidents per year using the 'year' column directly
@@ -34,13 +31,14 @@ if page == "Overview":
   yearly_df = yearly_counts.reset_index()
   yearly_df.columns = ['Year', 'Total Accidents']
 
+  st.title("Total Road Accidents (2020–2024)")
+  
 # Plot using Plotly
   fig = px.line(
-      yearly_df,
+     yearly_df,
      x='Year',
      y='Total Accidents',
-     title='Total Road Accidents per Year',
-      markers=True
+     markers=True
 )
 
   fig.update_layout(xaxis=dict(tickmode='linear'))
@@ -60,13 +58,14 @@ if page == "Overview":
   incident_counts = df['Address'].value_counts().reset_index()
   incident_counts.columns = ['Address', 'Total Incidents']
 
+  st.title("Total Road Accidents per Barangay (Alfonso, Carmona, GMA) in Cavite")
+
 # Plot interactive horizontal bar chart
   fig = px.bar(
     incident_counts,
     x='Total Incidents',
     y='Address',
     orientation='h',
-    title='Total Road Accidents per Barangay (Alfonso, Carmona, GMA) Cavite',
     labels={'Total Incidents': 'Number of Accidents'},
     hover_data={'Total Incidents': True, 'Address': True}
   )
@@ -262,10 +261,10 @@ if page == "Overview":
     y='Total Accidents',
     color='Time of Day',
     markers=True,
-    title=f'Time of Day Accident Trends by Year in {selected_municipality}'
+    title=f'Time of Day Accident Trends by Year: {selected_municipality}'
 )
 
-  st.subheader(f"Time of Day Accident Trends by Year – {selected_municipality}")
+  st.title("Time of Day Accident Trends by Year")
   st.plotly_chart(fig, use_container_width=True)
   
 ############# ALFONSO ############
