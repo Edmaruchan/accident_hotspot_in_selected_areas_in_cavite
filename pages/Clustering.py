@@ -165,7 +165,7 @@ if page == "Alfonso":
             title="Elbow Method for Optimal k (Interactive)",
             xaxis_title="Number of Clusters (k)",
             yaxis_title="Inertia",
-            hovermode='x unified'
+            hovermode='x unified',
         )
         st.subheader("Elbow Method to Determine Optimal k (Interactive)")
         st.plotly_chart(fig)
@@ -198,7 +198,7 @@ if page == "Alfonso":
                 mode='markers',
                 marker=dict(
                     color=color,
-                    size=10,
+                    size=8,
                     symbol='x'
                 ),
                 name=f"Cluster {cluster_num}"
@@ -208,7 +208,9 @@ if page == "Alfonso":
             title="KMeans Clustering of Barangays based on Number of Accidents",
             xaxis_title="Number of Accidents",
             yaxis_title="Barangay",
-            template="plotly_white"
+            template="plotly_white",
+            width=800,
+            height=800,
         )
 
         st.subheader("KMeans Clustering of Barangays based on Number of Accidents")
@@ -224,7 +226,7 @@ if page == "Alfonso":
         coords = df[['Latitude', 'Longitude']]
 
         # Streamlit sliders
-        eps = st.slider("Epsilon (distance threshold)", 0.01, 5.0, 0.1, step=0.01)
+        eps = st.slider("Epsilon (distance threshold)", 0.01, 5.0, 0.5, step=0.01)
         min_samples = st.slider("Min Samples (points per cluster)", 1, 20, 5)
 
         # Standardize coordinates
