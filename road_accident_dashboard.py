@@ -75,7 +75,7 @@ if page == "Overview":
         
 ################ YEARLY DISTRIBUTION OF ACCIDENTS USING PLOTLY ##################        
   
-  st.title("Yearly Accident Trends (2020–2024)")
+  st.title("Yearly Accident Trends in 3 Municipalities(2020–2024)")
   
   gma_path = "data/GMA/GMA 2020 - 2024.csv"
   alfonso_path = "data/Alfonso/ALFONSO 2020 - 2024.csv"
@@ -269,22 +269,33 @@ if page == "Overview":
   grouped = df.groupby(['Year', 'Time of Day']).size().reset_index(name='Total Accidents')
   grouped['Time of Day'] = pd.Categorical(grouped['Time of Day'], categories=time_order, ordered=True)
 
-# --- Plot ---
-  fig = px.line(
-    grouped,
-    x='Year',
-    y='Total Accidents',
-    color='Time of Day',
-    markers=True,
-    title=f'Time of Day Accident Trends by Year: {selected_municipality}'
-)
+# Define a color map for each time of day
+  time_color_map = {
+      'EARLY MORNING': "#000CAD",  # blue
+      'MORNING': "#00C0DA",        # green
+      'NOON': "#FFD085",           # orange
+      'AFTERNOON': "#FF9100",      # purple
+      'EVENING': "#050029"         # red
+  }
 
-  st.title("Time of Day Accident Trends by Year")
-  st.plotly_chart(fig, use_container_width=True)
-  
+  # --- Plot ---
+  fig = px.line(
+      grouped,
+      x='Year',
+      y='Total Accidents',
+      color='Time of Day',
+      color_discrete_map=time_color_map,  # Apply custom colors
+      markers=True,
+      title=f'Time of Day Accident Trends by Year: {selected_municipality}'
+  )
+
+  st.title("Time of Day Accident Trends in 3 Municipalities (2020–2024)")
+  st.plotly_chart(fig, use_container_width=True, config={"scrollZoom": False})
 
 ############# Weekend vs Weekday Distribution of Accidents ############
   # Reshape the DataFrame from wide to long format
+  st.title("Weekdays and Weekends trend in 3 Municipality (2020–2024)")
+  
   df = pd.read_csv("data/weekends vs weekdays all.csv")
   df_long = pd.melt(df, id_vars='Municipality', var_name='Day Type', value_name='Number of Accidents')
 
@@ -298,10 +309,10 @@ if page == "Overview":
       y='Number of Accidents',
       color='Municipality',
       markers=True,
-      title='Accidents on Weekdays vs Weekends by Municipality'
+      title='Accidents on Weekdays vs Weekends by Municipality (2020–2024)',
   )
 
-  st.plotly_chart(fig)
+  st.plotly_chart(fig, config={"scrollZoom": False,})
   
 ############# ALFONSO ############
 
