@@ -31,7 +31,10 @@ if page == "Overview":
      markers=True
 )
 
-  fig.update_layout(xaxis=dict(tickmode='linear'))
+  fig.update_layout(
+    xaxis=dict(tickmode='linear'),
+    dragmode=False
+    )
 
 # Show in Streamlit
   st.plotly_chart(fig)
@@ -108,7 +111,8 @@ if page == "Overview":
             xaxis_title="Year",
             yaxis_title="Number of Accidents",
             legend_title="Municipality",
-            template="plotly_white"
+            template="plotly_white",
+            dragmode=False,
         )
 
         # Show Plotly figure in Streamlit
@@ -158,7 +162,8 @@ if page == "Overview":
             xaxis_title="Year",
             yaxis_title="Number of Accidents",
             legend_title="Month",
-            template="plotly_white"
+            template="plotly_white",
+            dragmode=False
         )
 
   st.plotly_chart(fig, use_container_width=True)
@@ -284,7 +289,7 @@ elif page == "Alfonso":
       markers=True
 )
 
-    fig.update_layout(xaxis=dict(tickmode='linear'))
+    fig.update_layout(xaxis=dict(tickmode='linear'), dragmode=False)
 
 # Show in Streamlit
     st.plotly_chart(fig)
@@ -307,7 +312,10 @@ elif page == "Alfonso":
         hover_data={'Total Incidents': True, 'Address': True}
     )
 
-    fig.update_layout(yaxis={'categoryorder': 'total ascending'}, height=800)
+    fig.update_layout(yaxis={'categoryorder': 'total ascending'}, 
+                      height=800,
+                      dragmode=False
+                      )
 
     st.plotly_chart(fig)
 
@@ -337,7 +345,7 @@ elif page == "Alfonso":
 
         fig = px.line(yearly_df, x='Year', y='Total Accidents',
                       title='Total Road Accidents Per Year', markers=True)
-        fig.update_layout(xaxis=dict(tickmode='linear'))
+        fig.update_layout(xaxis=dict(tickmode='linear'), dragmode=False,)
         st.plotly_chart(fig)
 
     elif option == "Monthly Breakdown by Year":
@@ -370,7 +378,7 @@ elif page == "Alfonso":
             markers=True,
             title='Total Road Accidents per Year'
         )
-        fig_year.update_layout(xaxis=dict(tickmode='linear'))
+        fig_year.update_layout(xaxis=dict(tickmode='linear'), dragmode=False,)
         st.plotly_chart(fig_year)
 
     elif option == "Accidents per Month (per Year)":
@@ -439,7 +447,7 @@ elif page == "GMA":
       markers=True
 )
 
-    fig.update_layout(xaxis=dict(tickmode='linear'))
+    fig.update_layout(xaxis=dict(tickmode='linear'), dragmode=False)
 
 # Show in Streamlit
     st.plotly_chart(fig)
@@ -462,7 +470,7 @@ elif page == "GMA":
         hover_data={'Total Incidents': True, 'Address': True}
     )
 
-    fig.update_layout(yaxis={'categoryorder': 'total ascending'}, height=800)
+    fig.update_layout(yaxis={'categoryorder': 'total ascending'}, height=800, dragmode=False)
 
     st.plotly_chart(fig)
 
@@ -493,7 +501,7 @@ elif page == "GMA":
 
         fig = px.line(yearly_df, x='Year', y='Total Accidents',
                       title='Total Road Accidents Per Year', markers=True)
-        fig.update_layout(xaxis=dict(tickmode='linear'))
+        fig.update_layout(xaxis=dict(tickmode='linear'), dragmode=False)
         st.plotly_chart(fig)
 
     elif option == "Monthly Breakdown by Year":
@@ -526,7 +534,7 @@ elif page == "GMA":
             markers=True,
             title='Total Road Accidents per Year'
         )
-        fig_year.update_layout(xaxis=dict(tickmode='linear'))
+        fig_year.update_layout(xaxis=dict(tickmode='linear'), dragmode=False)
         st.plotly_chart(fig_year)
 
     elif option == "Accidents per Month (per Year)":
@@ -569,7 +577,6 @@ elif page == "GMA":
 
 elif page == "Carmona":
     st.subheader("Carmona Analysis")
-    #st.image("data/qgis_maps/carmona.png", caption="Hotspots in Carmona")
 
     df = pd.read_csv("data/Carmona/CARMONA 2020 - 2024.csv")
 
@@ -591,7 +598,7 @@ elif page == "Carmona":
       markers=True
 )
 
-    fig.update_layout(xaxis=dict(tickmode='linear'))
+    fig.update_layout(xaxis=dict(tickmode='linear'), dragmode=False)
 
 # Show in Streamlit
     st.plotly_chart(fig)
@@ -614,7 +621,7 @@ elif page == "Carmona":
         hover_data={'Total Incidents': True, 'Address': True}
     )
 
-    fig.update_layout(yaxis={'categoryorder': 'total ascending'}, height=800)
+    fig.update_layout(yaxis={'categoryorder': 'total ascending'}, height=800, dragmode=False)
 
     st.plotly_chart(fig)
 
@@ -644,7 +651,7 @@ elif page == "Carmona":
 
         fig = px.line(yearly_df, x='Year', y='Total Accidents',
                       title='Total Road Accidents Per Year', markers=True)
-        fig.update_layout(xaxis=dict(tickmode='linear'))
+        fig.update_layout(xaxis=dict(tickmode='linear'), dragmode=False)
         st.plotly_chart(fig)
 
     elif option == "Monthly Breakdown by Year":
