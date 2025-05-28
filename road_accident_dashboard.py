@@ -5,30 +5,7 @@ import plotly.graph_objects as go
 import os
 from PIL import Image
 
-st.set_page_config(
-    page_title="Clustering",
-    page_icon="🌐",
-    layout="wide",
-    initial_sidebar_state="auto",
-    menu_items={
-        'Get Help': None,
-        'Report a bug': None,
-        'About': None,
-    }
-)
 
-hide_streamlit_style = """
-    <style>
-    header[data-testid="stHeader"] {
-        display: none;
-    }
-    footer {
-        visibility: hidden;
-    }
-    </style>
-"""
-
-st.markdown(hide_streamlit_style, unsafe_allow_html=True)
 
 
 st.title("Road Accident Analysis in Selected Areas in Cavite")
