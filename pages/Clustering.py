@@ -28,7 +28,7 @@ if page == "Alfonso":
         df = df.dropna(subset=['Latitude', 'Longitude'])
         coords = df[['Latitude', 'Longitude']]
         inertias = []
-        k_range = range(1, 11)
+        k_range = range(1, 10)
         for k in k_range:
             kmeans = KMeans(n_clusters=k, random_state=0, n_init='auto')
             kmeans.fit(coords)
@@ -47,7 +47,7 @@ if page == "Alfonso":
         df = df.dropna(subset=['Latitude', 'Longitude'])
         coords = df[['Latitude', 'Longitude']]
         inertias = []
-        k_range = range(1, 11)
+        k_range = range(1, 10)
         for k in k_range:
             kmeans = KMeans(n_clusters=k, random_state=0, n_init='auto')
             kmeans.fit(coords)
@@ -66,29 +66,41 @@ if page == "Alfonso":
 
     # OpenStreetMap Clustering
     df = pd.read_csv("data/Alfonso/ALFONSO 2020 - 2024.csv")
+
+            # Drop rows with missing coordinates
     df = df.dropna(subset=["Latitude", "Longitude"])
+
+        # Optional: Reset index
     df = df.reset_index(drop=True)
-    k = optimal_k
+
+    k = optimal_k  # Use the optimal k from the elbow method
+
+        # Prepare data for clustering
     coords = df[['Latitude', 'Longitude']]
+
+        # Fit KMeans
     kmeans = KMeans(n_clusters=k, random_state=0, n_init='auto')
     df['Cluster'] = kmeans.fit_predict(coords)
 
+        # Plot with Plotly
     fig_alfonso = px.scatter_mapbox(
-        df,
-        lat='Latitude',
-        lon='Longitude',
-        color='Cluster',
-        zoom=10,
-        mapbox_style='open-street-map',
-        title=f'K-Means Clustering of Road Accidents (k={k})'
-    )
-    st.plotly_chart(fig_alfonso)
+                df,
+            lat='Latitude',
+            lon='Longitude',
+            color='Cluster',
+            zoom=11.5,
+            mapbox_style='open-street-map',
+            title=f'K-Means Clustering of Road Accidents (k={k})'
+            )
 
-    # KMeans clustering based on number of accidents
+    st.plotly_chart(fig_alfonso)
+    
+    
+    ############## KMeans clustering based on number of accidents
     df = pd.read_csv("data/Alfonso/ALFONSO total.csv")
     X = df[['Number of Accidents']]
     inertia = []
-    K = range(1, 8)
+    K = range(1, 10)
 
     for k in K:
         kmeans = KMeans(n_clusters=k, random_state=42)
@@ -98,10 +110,11 @@ if page == "Alfonso":
     knee = KneeLocator(K, inertia, curve='convex', direction='decreasing')
     optimal_k = knee.knee
 
+    # Elbow plot
     fig = go.Figure()
     fig.add_trace(go.Scatter(x=list(K), y=inertia, mode='lines+markers', name='Inertia'))
     fig.add_vline(x=optimal_k, line_dash='dash', line_color='red',
-                  annotation_text=f"Elbow at k={optimal_k}", annotation_position="top right")
+                annotation_text=f"Elbow at k={optimal_k}", annotation_position="top right")
     fig.update_layout(
         title="Elbow Method for Optimal k (Interactive)",
         xaxis_title="Number of Clusters (k)",
@@ -113,36 +126,55 @@ if page == "Alfonso":
     st.plotly_chart(fig)
     st.success(f"✅ Automatically detected optimal number of clusters: **k = {optimal_k}**")
 
+
+
+
+
+# --- KMeans Clustering ---
     kmeans = KMeans(n_clusters=optimal_k, random_state=42)
     df['Cluster'] = kmeans.fit_predict(X)
+    plot_df = df.sort_values('Number of Accidents', ascending=True)
 
+
+        # Custom color map by cluster index
     cluster_color_map = {
-        0: 'green',
-        1: 'red',
-        2: 'yellow'
-    }
+            0: 'yellow',
+            1: 'red',
+            2: 'green'
+            # Add more if k > 3, e.g., 3: 'blue', 4: 'purple', etc.
+        }
 
-    plot_df = df.sort_values('Number of Accidents')
+        # Sort for better visuals
+    sorted_barangays = plot_df['Barangay'].tolist()
+
+        # Plot using Plotly
     fig2 = go.Figure()
+
     for cluster_num in sorted(df['Cluster'].unique()):
-        cluster_data = plot_df[plot_df['Cluster'] == cluster_num]
-        color = cluster_color_map.get(cluster_num, 'gray')
-        fig2.add_trace(go.Scatter(
-            x=cluster_data['Number of Accidents'],
-            y=cluster_data['Barangay'],
-            mode='markers',
-            marker=dict(color=color, size=8, symbol='x'),
-            name=f"Cluster {cluster_num}"
-        ))
+            cluster_data = plot_df[plot_df['Cluster'] == cluster_num]
+            color = cluster_color_map.get(cluster_num, 'gray')  # Default to gray if not mapped
+            fig2.add_trace(go.Scatter(
+                x=cluster_data['Number of Accidents'],
+                y=cluster_data['Barangay'],
+                mode='markers',
+                marker=dict(
+                    color=color,
+                    size=8,
+                    symbol='x'
+                ),
+                name=f"Cluster {cluster_num}"
+            ))
 
     fig2.update_layout(
-        title="KMeans Clustering of Barangays based on Number of Accidents",
-        xaxis_title="Number of Accidents",
-        yaxis_title="Barangay",
-        template="plotly_white",
-        width=800,
-        height=800,
-    )
+            title="KMeans Clustering of Barangays based on Number of Accidents",
+            xaxis_title="Number of Accidents",
+            yaxis_title="Barangay",
+            template="plotly_white",
+            width=800,
+            height=800,
+                yaxis=dict(categoryorder='array', categoryarray=sorted_barangays)
+
+        )
 
     st.subheader("KMeans Clustering of Barangays based on Number of Accidents")
     st.plotly_chart(fig2, use_container_width=True)
@@ -277,6 +309,8 @@ elif page == "GMA":
         # --- KMeans Clustering ---
     kmeans = KMeans(n_clusters=optimal_k, random_state=42)
     df['Cluster'] = kmeans.fit_predict(X)
+    plot_df = df.sort_values('Number of Accidents', ascending=True)
+
 
         # Custom color map by cluster index
     cluster_color_map = {
@@ -287,7 +321,7 @@ elif page == "GMA":
         }
 
         # Sort for better visuals
-    plot_df = df.sort_values('Number of Accidents')
+    sorted_barangays = plot_df['Barangay'].tolist()
 
         # Plot using Plotly
     fig2 = go.Figure()
@@ -313,7 +347,9 @@ elif page == "GMA":
             yaxis_title="Barangay",
             template="plotly_white",
             width=800,
-            height=800
+            height=800,
+                yaxis=dict(categoryorder='array', categoryarray=sorted_barangays)
+
         )
 
     st.subheader("KMeans Clustering of Barangays based on Number of Accidents")
@@ -446,6 +482,8 @@ elif page == "Carmona":
         # --- KMeans Clustering ---
     kmeans = KMeans(n_clusters=optimal_k, random_state=42)
     df['Cluster'] = kmeans.fit_predict(X)
+    plot_df = df.sort_values('Number of Accidents', ascending=True)
+
 
         # Custom color map by cluster index
     cluster_color_map = {
@@ -456,7 +494,7 @@ elif page == "Carmona":
         }
 
         # Sort for better visuals
-    plot_df = df.sort_values('Number of Accidents')
+    sorted_barangays = plot_df['Barangay'].tolist()
 
         # Plot using Plotly
     fig2 = go.Figure()
@@ -482,7 +520,9 @@ elif page == "Carmona":
             yaxis_title="Barangay",
             template="plotly_white",
             width=800,
-            height=800
+            height=800,
+                yaxis=dict(categoryorder='array', categoryarray=sorted_barangays)
+
         )
 
     st.subheader("KMeans Clustering of Barangays based on Number of Accidents")

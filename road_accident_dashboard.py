@@ -2,6 +2,8 @@ import streamlit as st
 import pandas as pd
 import plotly.express as px
 import plotly.graph_objects as go
+import os
+from PIL import Image
 
 
 st.title("Road Accident Analysis in Selected Areas in Cavite")
@@ -255,12 +257,10 @@ if page == "Overview":
         return 'EARLY MORNING'
     elif t >= pd.to_datetime('06:00').time() and t <= pd.to_datetime('11:59').time():
         return 'MORNING'
-    elif t >= pd.to_datetime('13:00').time() and t <= pd.to_datetime('17:59').time():
+    elif t >= pd.to_datetime('12:00').time() and t <= pd.to_datetime('17:59').time():
         return 'AFTERNOON'
     elif t >= pd.to_datetime('18:00').time() and t <= pd.to_datetime('23:59').time():
         return 'EVENING'
-    else:
-        return 'NOON'  # Covers 12:00 to 12:59
 
   df['Time of Day'] = df['Time'].apply(categorize_time)
 
@@ -319,10 +319,34 @@ if page == "Overview":
   
 elif page == "Alfonso":
     st.subheader("Alfonso Analysis")
-
-    st.image("data/qgis_maps/ALFONSO/alfonso heatmap.png", caption="Alfonso heatmap")
     
+    
+    
+    image_folder = "data/qgis_maps/Alfonso"
+    image_files = sorted([f for f in os.listdir(image_folder) if f.endswith((".jpg", ".png", ".jpeg"))])
+
+    # --- Display image
+    current_image = Image.open(os.path.join(image_folder, image_files[st.session_state.index]))
+    st.image(current_image, use_container_width=True, caption=image_files[st.session_state.index])
     df = pd.read_csv("data/Alfonso/ALFONSO 2020 - 2024.csv")
+    
+    # --- Session state to keep track of current image
+    if "index" not in st.session_state:
+        st.session_state.index = 0
+
+    # --- Navigation buttons
+    col1, col_spacer, col2 = st.columns([1, 10, 1])  # Adjust column widths as needed
+    with col1:
+      with st.container():
+        if st.button("⬅️"):
+            st.session_state.index = (st.session_state.index - 1) % len(image_files)
+    with col2:
+      with st.container():
+        if st.button("➡️"):
+            st.session_state.index = (st.session_state.index + 1) % len(image_files)
+
+    st.write("")
+    
     
 
     
@@ -340,7 +364,7 @@ elif page == "Alfonso":
 
 
     # Choose analysis type
-    option = st.radio("Select View", ["Accidents Per Year", "Monthly Breakdown by Year", "Monthly Accidents (All Years)"])
+    option = st.radio("Select one", ["Accidents Per Year", "Monthly Breakdown by Year", "Monthly Accidents (All Years)"])
 
     if option == "Accidents Per Year":
 
@@ -457,31 +481,28 @@ elif page == "Alfonso":
 elif page == "GMA":
     st.subheader("GMA Analysis")
 
-    st.image("data/qgis_maps/GMA/gma heatmap.png", caption="GMA heatmap")
-    df = pd.read_csv("data/GMA/GMA 2020 - 2024.csv")
+    image_folder = "data/qgis_maps/GMA"
+    image_files = sorted([f for f in os.listdir(image_folder) if f.endswith((".jpg", ".png", ".jpeg"))])
 
-    df = pd.read_csv("data/GMA/GMA 2020 - 2024.csv")
+    # --- Display image
+    current_image = Image.open(os.path.join(image_folder, image_files[st.session_state.index]))
+    st.image(current_image, use_container_width=True, caption=image_files[st.session_state.index])
 
-    df.columns = df.columns.str.strip()
-   
-    incident_counts = df['Address'].value_counts().reset_index()
-    incident_counts.columns = ['Address', 'Total Incidents']
+    
+    # --- Session state to keep track of current image
+    if "index" not in st.session_state:
+        st.session_state.index = 0
 
-    # Create interactive horizontal bar chart
-    fig = px.bar(
-        incident_counts,
-        x='Total Incidents',
-        y='Address',
-        orientation='h',
-        title='Total Road Accidents per Barangay in GMA',
-        labels={'Total Incidents': 'Number of Accidents'},
-        hover_data={'Total Incidents': True, 'Address': True}
-    )
-
-    fig.update_layout(yaxis={'categoryorder': 'total ascending'}, height=800, dragmode=False)
-
-    st.plotly_chart(fig)
-
+    # --- Navigation buttons
+    col1, col_spacer, col2 = st.columns([1, 10, 1])  # Adjust column widths as needed
+    with col1:
+      with st.container():
+        if st.button("⬅️"):
+            st.session_state.index = (st.session_state.index - 1) % len(image_files)
+    with col2:
+      with st.container():
+        if st.button("➡️"):
+            st.session_state.index = (st.session_state.index + 1) % len(image_files)  
 
     df = pd.read_csv("data/GMA/GMA 2020 - 2024.csv")
     
@@ -585,14 +606,6 @@ elif page == "GMA":
         )
         st.plotly_chart(fig)
         
-        
-elif page == "Carmona":
-    st.subheader("Carmona Analysis")
-    st.image("data/qgis_maps/Carmona/carmona heatmap.png", caption="Carmona heatmap")
-    df = pd.read_csv("data/Carmona/CARMONA 2020 - 2024.csv")
-
-
-    df = pd.read_csv("data/Carmona/CARMONA 2020 - 2024.csv")
 
     df.columns = df.columns.str.strip()
    
@@ -605,7 +618,7 @@ elif page == "Carmona":
         x='Total Incidents',
         y='Address',
         orientation='h',
-        title='Total Road Accidents per Barangay in Carmona',
+        title='Total Road Accidents per Barangay in GMA',
         labels={'Total Incidents': 'Number of Accidents'},
         hover_data={'Total Incidents': True, 'Address': True}
     )
@@ -614,7 +627,35 @@ elif page == "Carmona":
 
     st.plotly_chart(fig)
 
+
+
+        
+elif page == "Carmona":
+    st.subheader("Carmona Analysis")
     
+    image_folder = "data/qgis_maps/Carmona"
+    image_files = sorted([f for f in os.listdir(image_folder) if f.endswith((".jpg", ".png", ".jpeg"))])
+
+    # --- Display image
+    current_image = Image.open(os.path.join(image_folder, image_files[st.session_state.index]))
+    st.image(current_image, use_container_width=True, caption=image_files[st.session_state.index])
+  
+    
+    # --- Session state to keep track of current image
+    if "index" not in st.session_state:
+        st.session_state.index = 0
+
+    # --- Navigation buttons
+    col1, col_spacer, col2 = st.columns([1, 10, 1])  # Adjust column widths as needed
+    with col1:
+      with st.container():
+        if st.button("⬅️"):
+            st.session_state.index = (st.session_state.index - 1) % len(image_files)
+    with col2:
+      with st.container():
+        if st.button("➡️"):
+            st.session_state.index = (st.session_state.index + 1) % len(image_files)
+
     df = pd.read_csv("data/Carmona/CARMONA 2020 - 2024.csv")
     
     df['Date'] = pd.to_datetime(df['Date'], errors='coerce')
@@ -631,7 +672,7 @@ elif page == "Carmona":
 
 
     # Choose analysis type
-    option = st.radio("Select View", ["Accidents Per Year", "Monthly Breakdown by Year", "Monthly Accidents (All Years)"])
+    option = st.radio("Select One", ["Accidents Per Year", "Monthly Breakdown by Year", "Monthly Accidents (All Years)"])
 
     if option == "Accidents Per Year":
 
@@ -717,5 +758,30 @@ elif page == "Carmona":
         )
         st.plotly_chart(fig)
 
+    
+    df = pd.read_csv("data/Carmona/CARMONA 2020 - 2024.csv")
+
+    df.columns = df.columns.str.strip()
+   
+    incident_counts = df['Address'].value_counts().reset_index()
+    incident_counts.columns = ['Address', 'Total Incidents']
+
+    # Create interactive horizontal bar chart
+    fig = px.bar(
+        incident_counts,
+        x='Total Incidents',
+        y='Address',
+        orientation='h',
+        title='Total Road Accidents per Barangay in Carmona',
+        labels={'Total Incidents': 'Number of Accidents'},
+        hover_data={'Total Incidents': True, 'Address': True}
+    )
+
+    fig.update_layout(yaxis={'categoryorder': 'total ascending'}, height=800, dragmode=False)
+
+    st.plotly_chart(fig)
+
+    
+    
             
             
