@@ -7,7 +7,7 @@ from kneed import KneeLocator
 import plotly.graph_objects as go
 
 st.set_page_config(
-    page_title="Road accident dashboard",
+    page_title="Clustering",
     page_icon="🌐",
     layout="wide",
     initial_sidebar_state="auto",

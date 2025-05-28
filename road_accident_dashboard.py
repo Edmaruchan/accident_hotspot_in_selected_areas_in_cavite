@@ -5,8 +5,29 @@ import plotly.graph_objects as go
 import os
 from PIL import Image
 
+st.set_page_config(
+    page_title="Road Accident Dashboard",
+    page_icon="🚗",
+    layout="wide",
+    initial_sidebar_state="auto",
+    menu_items={
+        'Get Help': None,
+        'Report a bug': None,
+        'About': None,
+    }
+)
 
-
+hide_streamlit_style = """
+    <style>
+    header[data-testid="stHeader"] {
+        display: none;
+    }
+    footer {
+        visibility: hidden;
+    }
+    </style>
+"""
+st.markdown(hide_streamlit_style, unsafe_allow_html=True)
 
 st.title("Road Accident Analysis in Selected Areas in Cavite")
 
@@ -322,49 +343,12 @@ if page == "Overview":
 elif page == "Alfonso":
     st.subheader("Alfonso Analysis")    
     
-      # --- Session state to keep track of current image, initialize first ---
-    # Initialize session state index if not present
-    if "index" not in st.session_state:
-        st.session_state.index = 0
-
-    image_folder = "data/qgis_maps/Alfonso"
-
-    # Check if folder exists
-    if not os.path.exists(image_folder):
-        st.error(f"Image folder not found: {image_folder}")
-    else:
-        # Get list of image files
-        image_files = sorted([f for f in os.listdir(image_folder) if f.lower().endswith((".jpg", ".png", ".jpeg"))])
-
-        if not image_files:
-            st.error(f"No image files found in {image_folder}")
-        else:
-            # Make sure index is within bounds
-            if st.session_state.index >= len(image_files):
-                st.session_state.index = 0
-
-            # Display current image
-            current_image_path = os.path.join(image_folder, image_files[st.session_state.index])
-            current_image = Image.open(current_image_path)
-            st.image(current_image, use_container_width=True, caption=image_files[st.session_state.index])
-
-            # Load CSV (make sure path exists too)
-            csv_path = "data/Alfonso/ALFONSO 2020 - 2024.csv"
-            if os.path.exists(csv_path):
-                df = pd.read_csv(csv_path)
-            else:
-                st.error(f"CSV file not found: {csv_path}")
-
-            # Navigation buttons
-            col1, col_spacer, col2 = st.columns([1, 10, 1])
-            with col1:
-                if st.button("⬅️ Previous"):
-                    st.session_state.index = (st.session_state.index - 1) % len(image_files)
-            with col2:
-                if st.button("Next ➡️"):
-                    st.session_state.index = (st.session_state.index + 1) % len(image_files)
+    st.image("data/qgis_maps/Alfonso/alfonso heatmap.png", caption="Alfonso Heatmap")
+    st.image("data/qgis_maps/Alfonso/alfonso bounding geometry.png", caption="Alfonso Bounding Geometry")
+    st.image("data/qgis_maps/Alfonso/alfonso_year.png")
+    
+    
     df = pd.read_csv("data/Alfonso/ALFONSO 2020 - 2024.csv")
-
     
     df['Date'] = pd.to_datetime(df['Date'], errors='coerce')
     df = df.dropna(subset=['Date'])
@@ -497,28 +481,9 @@ elif page == "Alfonso":
 elif page == "GMA":
     st.subheader("GMA Analysis")
 
-    image_folder = "data/qgis_maps/GMA"
-    image_files = sorted([f for f in os.listdir(image_folder) if f.endswith((".jpg", ".png", ".jpeg"))])
-
-    # --- Display image
-    current_image = Image.open(os.path.join(image_folder, image_files[st.session_state.index]))
-    st.image(current_image, use_container_width=True, caption=image_files[st.session_state.index])
-
-    
-    # --- Session state to keep track of current image
-    if "index" not in st.session_state:
-        st.session_state.index = 0
-
-    # --- Navigation buttons
-    col1, col_spacer, col2 = st.columns([1, 10, 1])  # Adjust column widths as needed
-    with col1:
-      with st.container():
-        if st.button("⬅️"):
-            st.session_state.index = (st.session_state.index - 1) % len(image_files)
-    with col2:
-      with st.container():
-        if st.button("➡️"):
-            st.session_state.index = (st.session_state.index + 1) % len(image_files)  
+    st.image("data/qgis_maps/GMA/GMA heatmap.png", caption="GMA Heatmap")
+    st.image("data/qgis_maps/GMA/gma bounding geometry.png", caption="GMA Bounding Geometry")
+    st.image("data/qgis_maps/GMA/gma_year.png")
 
     df = pd.read_csv("data/GMA/GMA 2020 - 2024.csv")
     
@@ -649,28 +614,9 @@ elif page == "GMA":
 elif page == "Carmona":
     st.subheader("Carmona Analysis")
     
-    image_folder = "data/qgis_maps/Carmona"
-    image_files = sorted([f for f in os.listdir(image_folder) if f.endswith((".jpg", ".png", ".jpeg"))])
-
-    # --- Display image
-    current_image = Image.open(os.path.join(image_folder, image_files[st.session_state.index]))
-    st.image(current_image, use_container_width=True, caption=image_files[st.session_state.index])
-  
-    
-    # --- Session state to keep track of current image
-    if "index" not in st.session_state:
-        st.session_state.index = 0
-
-    # --- Navigation buttons
-    col1, col_spacer, col2 = st.columns([1, 10, 1])  # Adjust column widths as needed
-    with col1:
-      with st.container():
-        if st.button("⬅️"):
-            st.session_state.index = (st.session_state.index - 1) % len(image_files)
-    with col2:
-      with st.container():
-        if st.button("➡️"):
-            st.session_state.index = (st.session_state.index + 1) % len(image_files)
+    st.image("data/qgis_maps/Carmona/carmona heatmap.png", caption="Carmona Heatmap")
+    st.image("data/qgis_maps/Carmona/carmona bounding geometry.png", caption="Carmona Bounding Geometry")
+    st.image("data/qgis_maps/Carmona/carmona_year.png")
 
     df = pd.read_csv("data/Carmona/CARMONA 2020 - 2024.csv")
     
