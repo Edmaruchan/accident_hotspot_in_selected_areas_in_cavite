@@ -1,23 +1,13 @@
 import streamlit as st
 import pandas as pd
-import numpy as np
-from sklearn.cluster import DBSCAN
-import matplotlib.pyplot as plt
-from sklearn.cluster import KMeans
 import plotly.express as px
-import streamlit as st
-from PIL import Image
-from sklearn.neighbors import NearestNeighbors
-import pyproj
-from kneed import KneeLocator
 import plotly.graph_objects as go
 
 
 st.title("Road Accident Analysis in Cavite")
 
 st.subheader("Welcome to the Road Accident Dashboard")
-st.write("Select a municipality to view results and maps.")
-page = st.radio("Select Area", ["Overview", "Alfonso", "GMA", "Carmona"])
+page = st.sidebar.radio("Select Area", ["Overview", "Alfonso", "GMA", "Carmona"])
 
 # Pages
 if page == "Overview":
@@ -71,6 +61,7 @@ if page == "Overview":
   )
 
   fig.update_layout(
+    dragmode=False,
     yaxis={'categoryorder': 'total ascending'},
     height=1000,         # Adjust height here
     width=900,           # Add custom width

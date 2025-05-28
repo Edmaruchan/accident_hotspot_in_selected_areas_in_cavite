@@ -2,20 +2,14 @@ import streamlit as st
 import pandas as pd
 import numpy as np
 from sklearn.cluster import DBSCAN
-import matplotlib.pyplot as plt
 from sklearn.cluster import KMeans
 import plotly.express as px
 import streamlit as st
-from PIL import Image
-from sklearn.neighbors import NearestNeighbors
-import pyproj
 from kneed import KneeLocator
 import plotly.graph_objects as go
 from sklearn.preprocessing import StandardScaler
-import matplotlib.patches as mpatches
 import folium
 from streamlit_folium import st_folium
-from sklearn import metrics
 from sklearn.metrics import silhouette_score
 
 
