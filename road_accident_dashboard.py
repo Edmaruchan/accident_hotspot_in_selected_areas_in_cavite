@@ -320,36 +320,29 @@ if page == "Overview":
 
   
 elif page == "Alfonso":
-    st.subheader("Alfonso Analysis")
+    st.subheader("Alfonso Analysis")    
     
-    
-    
-    image_folder = "data/qgis_maps/Alfonso"
-    image_files = sorted([f for f in os.listdir(image_folder) if f.endswith((".jpg", ".png", ".jpeg"))])
-
-    # --- Display image
-    current_image = Image.open(os.path.join(image_folder, image_files[st.session_state.index]))
-    st.image(current_image, use_container_width=True, caption=image_files[st.session_state.index])
-    df = pd.read_csv("data/Alfonso/ALFONSO 2020 - 2024.csv")
-    
-    # --- Session state to keep track of current image
+   # --- Session state to keep track of current image, initialize first ---
     if "index" not in st.session_state:
         st.session_state.index = 0
 
-    # --- Navigation buttons
-    col1, col_spacer, col2 = st.columns([1, 10, 1])  # Adjust column widths as needed
+    image_folder = "data/qgis_maps/Alfonso"
+    image_files = sorted([f for f in os.listdir(image_folder) if f.endswith((".jpg", ".png", ".jpeg"))])
+
+    # --- Display image ---
+    current_image = Image.open(os.path.join(image_folder, image_files[st.session_state.index]))
+    st.image(current_image, use_container_width=True, caption=image_files[st.session_state.index])
+
+    # --- Navigation buttons ---
+    col1, col_spacer, col2 = st.columns([1, 10, 1])  # Adjust widths as needed
     with col1:
-      with st.container():
         if st.button("⬅️"):
             st.session_state.index = (st.session_state.index - 1) % len(image_files)
     with col2:
-      with st.container():
         if st.button("➡️"):
             st.session_state.index = (st.session_state.index + 1) % len(image_files)
-
-    st.write("")
-    
-    
+        
+    df = pd.read_csv("data/Alfonso/ALFONSO 2020 - 2024.csv")
 
     
     df['Date'] = pd.to_datetime(df['Date'], errors='coerce')
