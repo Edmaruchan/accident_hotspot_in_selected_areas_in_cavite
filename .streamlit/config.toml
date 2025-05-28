@@ -7,3 +7,4 @@ target = "road_accident_dashboard.py"
 
 [ui]
 hideMenu = true
+hideToolbar = true
