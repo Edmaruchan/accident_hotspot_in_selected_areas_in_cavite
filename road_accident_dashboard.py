@@ -322,26 +322,47 @@ if page == "Overview":
 elif page == "Alfonso":
     st.subheader("Alfonso Analysis")    
     
-   # --- Session state to keep track of current image, initialize first ---
+      # --- Session state to keep track of current image, initialize first ---
+    # Initialize session state index if not present
     if "index" not in st.session_state:
         st.session_state.index = 0
 
     image_folder = "data/qgis_maps/Alfonso"
-    image_files = sorted([f for f in os.listdir(image_folder) if f.endswith((".jpg", ".png", ".jpeg"))])
 
-    # --- Display image ---
-    current_image = Image.open(os.path.join(image_folder, image_files[st.session_state.index]))
-    st.image(current_image, use_container_width=True, caption=image_files[st.session_state.index])
+    # Check if folder exists
+    if not os.path.exists(image_folder):
+        st.error(f"Image folder not found: {image_folder}")
+    else:
+        # Get list of image files
+        image_files = sorted([f for f in os.listdir(image_folder) if f.lower().endswith((".jpg", ".png", ".jpeg"))])
 
-    # --- Navigation buttons ---
-    col1, col_spacer, col2 = st.columns([1, 10, 1])  # Adjust widths as needed
-    with col1:
-        if st.button("⬅️"):
-            st.session_state.index = (st.session_state.index - 1) % len(image_files)
-    with col2:
-        if st.button("➡️"):
-            st.session_state.index = (st.session_state.index + 1) % len(image_files)
-        
+        if not image_files:
+            st.error(f"No image files found in {image_folder}")
+        else:
+            # Make sure index is within bounds
+            if st.session_state.index >= len(image_files):
+                st.session_state.index = 0
+
+            # Display current image
+            current_image_path = os.path.join(image_folder, image_files[st.session_state.index])
+            current_image = Image.open(current_image_path)
+            st.image(current_image, use_container_width=True, caption=image_files[st.session_state.index])
+
+            # Load CSV (make sure path exists too)
+            csv_path = "data/Alfonso/ALFONSO 2020 - 2024.csv"
+            if os.path.exists(csv_path):
+                df = pd.read_csv(csv_path)
+            else:
+                st.error(f"CSV file not found: {csv_path}")
+
+            # Navigation buttons
+            col1, col_spacer, col2 = st.columns([1, 10, 1])
+            with col1:
+                if st.button("⬅️ Previous"):
+                    st.session_state.index = (st.session_state.index - 1) % len(image_files)
+            with col2:
+                if st.button("Next ➡️"):
+                    st.session_state.index = (st.session_state.index + 1) % len(image_files)
     df = pd.read_csv("data/Alfonso/ALFONSO 2020 - 2024.csv")
 
     
