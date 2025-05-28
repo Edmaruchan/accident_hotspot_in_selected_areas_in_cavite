@@ -6,6 +6,31 @@ import streamlit as st
 from kneed import KneeLocator
 import plotly.graph_objects as go
 
+st.set_page_config(
+    page_title="Road accident dashboard",
+    page_icon="🌐",
+    layout="wide",
+    initial_sidebar_state="auto",
+    menu_items={
+        'Get Help': None,
+        'Report a bug': None,
+        'About': None,
+    }
+)
+
+hide_streamlit_style = """
+    <style>
+    header[data-testid="stHeader"] {
+        display: none;
+    }
+    footer {
+        visibility: hidden;
+    }
+    </style>
+"""
+
+st.markdown(hide_streamlit_style, unsafe_allow_html=True)
+
 
 
 

@@ -6,7 +6,7 @@ import os
 from PIL import Image
 
 st.set_page_config(
-    page_title="Your App Title",
+    page_title="Clustering",
     page_icon="🌐",
     layout="wide",
     initial_sidebar_state="auto",
