@@ -1,12 +1,11 @@
 import streamlit as st
 import pandas as pd
-import numpy as np
-from sklearn.cluster import DBSCAN
 from sklearn.cluster import KMeans
 import plotly.express as px
 import streamlit as st
 from kneed import KneeLocator
 import plotly.graph_objects as go
+
 
 
 
@@ -414,7 +413,7 @@ elif page == "Carmona":
         
         
         ################## K means clustering based on number of accidents ####################
-    df = pd.read_csv("data/GMA/GMA total.csv")
+    df = pd.read_csv("data/Carmona/CARMONA total.csv")
         
     X = df[['Number of Accidents']]
     inertia = []

@@ -169,6 +169,25 @@ if page == "Overview":
   st.plotly_chart(fig, use_container_width=True)
   
   
+  ############# SEASONAL DISTRIBUTION OF ACCIDENTS ############
+  
+  df = pd.read_csv("data/seasons all.csv")
+    
+  season_order = ['Cool Dry Season', 'Hot Dry Season', 'Wet Season']
+  df['Season'] = pd.Categorical(df['Season'], categories=season_order, ordered=True)
+
+# Plot line chart
+  fig = px.line(
+    df,
+    x='Season',
+    y='Number of Accidents',
+    color='Municipality',
+    markers=True,
+    title='Seasonal Road Accidents per Municipality'
+)
+
+  st.plotly_chart(fig)
+  
   
   ############ WEEKLY DISTRIBUTION OF ACCIDENTS ############
   
@@ -203,7 +222,7 @@ if page == "Overview":
     labels={'Total Accidents': 'Total Accidents', 'Year': 'Year'}
 )
 
-  st.plotly_chart(fig, use_container_width=True)
+  st.plotly_chart(fig, use_container_width=True, config={"scrollZoom": False,})
   
   
   
@@ -262,6 +281,27 @@ if page == "Overview":
 
   st.title("Time of Day Accident Trends by Year")
   st.plotly_chart(fig, use_container_width=True)
+  
+
+############# Weekend vs Weekday Distribution of Accidents ############
+  # Reshape the DataFrame from wide to long format
+  df = pd.read_csv("data/weekends vs weekdays all.csv")
+  df_long = pd.melt(df, id_vars='Municipality', var_name='Day Type', value_name='Number of Accidents')
+
+  # Optional: Set order of Day Type
+  df_long['Day Type'] = pd.Categorical(df_long['Day Type'], categories=['Weekdays', 'Weekends'], ordered=True)
+
+  # Plot using Plotly
+  fig = px.line(
+      df_long,
+      x='Day Type',
+      y='Number of Accidents',
+      color='Municipality',
+      markers=True,
+      title='Accidents on Weekdays vs Weekends by Municipality'
+  )
+
+  st.plotly_chart(fig)
   
 ############# ALFONSO ############
 
