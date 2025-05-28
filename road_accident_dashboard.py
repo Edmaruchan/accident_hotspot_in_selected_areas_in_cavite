@@ -27,6 +27,7 @@ hide_streamlit_style = """
     }
     </style>
 """
+st.markdown(hide_streamlit_style, unsafe_allow_html=True)
 
 st.title("Road Accident Analysis in Selected Areas in Cavite")
 
@@ -613,9 +614,9 @@ elif page == "GMA":
 elif page == "Carmona":
     st.subheader("Carmona Analysis")
     
-    st.image("data/qgis_maps/Carmona/carmona heatmap.png", caption="Carmona Heatmap")
-    st.image("data/qgis_maps/Carmona/carmona bounding geometry.png", caption="Carmona Bounding Geometry")
-    st.image("data/qgis_maps/Carmona/carmona_year.png")
+    st.image("data/qgis_maps/CARMONA/carmona heatmap.png", caption="Carmona Heatmap")
+    st.image("data/qgis_maps/CARMONA/carmona bounding geometry.png", caption="Carmona Bounding Geometry")
+    st.image("data/qgis_maps/CARMONA/carmona_year.png")
 
     df = pd.read_csv("data/Carmona/CARMONA 2020 - 2024.csv")
     
