@@ -4,3 +4,6 @@ headless = true
 [general]
 # This tells Streamlit Cloud which file to run
 target = "road_accident_dashboard.py"
+
+[ui]
+hideMenu = true
