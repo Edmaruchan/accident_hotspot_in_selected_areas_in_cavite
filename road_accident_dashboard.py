@@ -342,9 +342,9 @@ if page == "Overview":
 elif page == "Alfonso":
     st.subheader("Alfonso Analysis")    
     
-    st.image("data/qgis_maps/Alfonso/alfonso heatmap.png", caption="Alfonso Heatmap")
-    st.image("data/qgis_maps/Alfonso/alfonso bounding geometry.png", caption="Alfonso Bounding Geometry")
-    st.image("data/qgis_maps/Alfonso/alfonso_year.png")
+    st.image("data/qgis_maps/ALFONSO/alfonso heatmap.png", caption="Alfonso Heatmap")
+    st.image("data/qgis_maps/ALFONSO/alfonso bounding geometry.png", caption="Alfonso Bounding Geometry")
+    st.image("data/qgis_maps/ALFONSO/alfonso_year.png")
     
     
     df = pd.read_csv("data/Alfonso/ALFONSO 2020 - 2024.csv")
