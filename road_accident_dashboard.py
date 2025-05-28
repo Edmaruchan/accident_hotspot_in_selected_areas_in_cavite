@@ -4,7 +4,7 @@ import plotly.express as px
 import plotly.graph_objects as go
 
 
-st.title("Road Accident Analysis in Cavite")
+st.title("Road Accident Analysis in Selected Areas in Cavite")
 
 st.subheader("Welcome to the Road Accident Dashboard")
 page = st.sidebar.radio("Select Area", ["Overview", "Alfonso", "GMA", "Carmona"])
@@ -268,59 +268,12 @@ if page == "Overview":
   
 elif page == "Alfonso":
     st.subheader("Alfonso Analysis")
-    #st.image("data/qgis_maps/alfonso.png", caption="Hotspots in Alfonso")
 
+    st.image("data/qgis_maps/ALFONSO/alfonso heatmap.png", caption="Alfonso heatmap")
+    
     df = pd.read_csv("data/Alfonso/ALFONSO 2020 - 2024.csv")
+    
 
-
-# Count the number of accidents per year using the 'year' column directly
-    yearly_counts = df['Year'].value_counts().sort_index()
-
-# Convert to DataFrame for display or plotting
-    yearly_df = yearly_counts.reset_index()
-    yearly_df.columns = ['Year', 'Total Accidents']
-
-# Plot using Plotly
-    fig = px.line(
-      yearly_df,
-     x='Year',
-     y='Total Accidents',
-     title='Total Road Accidents per Year in Alfonso',
-      markers=True
-)
-
-    fig.update_layout(xaxis=dict(tickmode='linear'), dragmode=False)
-
-# Show in Streamlit
-    st.plotly_chart(fig)
-
-    df = pd.read_csv("data/Alfonso/ALFONSO 2020 - 2024.csv")
-
-    df.columns = df.columns.str.strip()
-   
-    incident_counts = df['Address'].value_counts().reset_index()
-    incident_counts.columns = ['Address', 'Total Incidents']
-
-    # Create interactive horizontal bar chart
-    fig = px.bar(
-        incident_counts,
-        x='Total Incidents',
-        y='Address',
-        orientation='h',
-        title='Total Road Accidents per Address in Alfonso',
-        labels={'Total Incidents': 'Number of Accidents'},
-        hover_data={'Total Incidents': True, 'Address': True}
-    )
-
-    fig.update_layout(yaxis={'categoryorder': 'total ascending'}, 
-                      height=800,
-                      dragmode=False
-                      )
-
-    st.plotly_chart(fig)
-
-
-    df = pd.read_csv("data/Alfonso/ALFONSO 2020 - 2024.csv")
     
     df['Date'] = pd.to_datetime(df['Date'], errors='coerce')
     df = df.dropna(subset=['Date'])
@@ -331,7 +284,7 @@ elif page == "Alfonso":
     df['Month_Num'] = df['Date'].dt.month  # Useful for chronological sorting
     
 
-# Now you can sort by year and month
+#  Now you can sort by year and month
     df = df.sort_values(['Year', 'Month_Num'])
 
 
@@ -339,6 +292,8 @@ elif page == "Alfonso":
     option = st.radio("Select View", ["Accidents Per Year", "Monthly Breakdown by Year", "Monthly Accidents (All Years)"])
 
     if option == "Accidents Per Year":
+
+        st.subheader("Total Accidents Per Year in Alfonso")
         yearly_counts = df['Year'].value_counts().sort_index()
         yearly_df = yearly_counts.reset_index()
         yearly_df.columns = ['Year', 'Total Accidents']
@@ -349,6 +304,7 @@ elif page == "Alfonso":
         st.plotly_chart(fig)
 
     elif option == "Monthly Breakdown by Year":
+        st.subheader("Total Accidents Per Month in Alfonso")
         # Let user select a year
         selected_year = st.selectbox("Select Year", sorted(df['Year'].unique()))
         filtered_df = df[df['Year'] == selected_year]
@@ -403,7 +359,8 @@ elif page == "Alfonso":
         st.plotly_chart(fig_month)
 
     elif option == "Monthly Accidents (All Years)":
-    
+
+        st.subheader("Total Accidents Per Month (2020–2024) in Alfonso")
         monthly_all_years = (
         df.groupby(['Month', 'Month_Num'])
         .size()
@@ -414,43 +371,43 @@ elif page == "Alfonso":
         fig = px.bar(
         monthly_all_years,
         x='Month',
-        y='Total Accidents',
-        title='Total Accidents Per Month (2020–2024)'
+        y='Total Accidents'
         )
         st.plotly_chart(fig)
 
+########## ALL ACCIDENTS PER ADDRESS IN ALFONSO ##########
 
+    df = pd.read_csv("data/Alfonso/ALFONSO 2020 - 2024.csv")
+
+    df.columns = df.columns.str.strip()
+   
+    incident_counts = df['Address'].value_counts().reset_index()
+    incident_counts.columns = ['Address', 'Total Incidents']
+
+    # Create interactive horizontal bar chart
+    fig = px.bar(
+        incident_counts,
+        x='Total Incidents',
+        y='Address',
+        orientation='h',
+        title='Total Road Accidents per Address in Alfonso',
+        labels={'Total Incidents': 'Number of Accidents'},
+        hover_data={'Total Incidents': True, 'Address': True}
+    )
+
+    fig.update_layout(yaxis={'categoryorder': 'total ascending'}, 
+                      height=800,
+                      dragmode=False
+                      )
+
+    st.plotly_chart(fig)
     
     
 elif page == "GMA":
     st.subheader("GMA Analysis")
-   # st.image("data/qgis_maps/gma.png", caption="Hotspots in GMA")
-   # st.image("data/qgis_maps/GMA/gma_heatmap.png", caption="Accident Heatmap in GMA")
-   # st.image("data/qgis_maps/GMA/gma_month.png", caption="W.I.P")
-   # st.image("data/qgis_maps/GMA/gma_year_1.png", caption="W.I.P")
 
+    st.image("data/qgis_maps/GMA/gma heatmap.png", caption="GMA heatmap")
     df = pd.read_csv("data/GMA/GMA 2020 - 2024.csv")
-
-    # Count the number of accidents per year using the 'year' column directly
-    yearly_counts = df['Year'].value_counts().sort_index()
-
-# Convert to DataFrame for display or plotting
-    yearly_df = yearly_counts.reset_index()
-    yearly_df.columns = ['Year', 'Total Accidents']
-
-# Plot using Plotly
-    fig = px.line(
-      yearly_df,
-     x='Year',
-     y='Total Accidents',
-     title='Total Road Accidents per Year in GMA',
-      markers=True
-)
-
-    fig.update_layout(xaxis=dict(tickmode='linear'), dragmode=False)
-
-# Show in Streamlit
-    st.plotly_chart(fig)
 
     df = pd.read_csv("data/GMA/GMA 2020 - 2024.csv")
 
@@ -486,25 +443,27 @@ elif page == "GMA":
     df['Month_Num'] = df['Date'].dt.month  # Useful for chronological sorting
     
 
-# Now you can sort by year and month
+#  Now you can sort by year and month
     df = df.sort_values(['Year', 'Month_Num'])
-
 
 
     # Choose analysis type
     option = st.radio("Select View", ["Accidents Per Year", "Monthly Breakdown by Year", "Monthly Accidents (All Years)"])
 
     if option == "Accidents Per Year":
+
+        st.subheader("Total Accidents Per Year in GMA")
         yearly_counts = df['Year'].value_counts().sort_index()
         yearly_df = yearly_counts.reset_index()
         yearly_df.columns = ['Year', 'Total Accidents']
 
         fig = px.line(yearly_df, x='Year', y='Total Accidents',
                       title='Total Road Accidents Per Year', markers=True)
-        fig.update_layout(xaxis=dict(tickmode='linear'), dragmode=False)
+        fig.update_layout(xaxis=dict(tickmode='linear'), dragmode=False,)
         st.plotly_chart(fig)
 
     elif option == "Monthly Breakdown by Year":
+        st.subheader("Total Accidents Per Month in GMA")
         # Let user select a year
         selected_year = st.selectbox("Select Year", sorted(df['Year'].unique()))
         filtered_df = df[df['Year'] == selected_year]
@@ -534,7 +493,7 @@ elif page == "GMA":
             markers=True,
             title='Total Road Accidents per Year'
         )
-        fig_year.update_layout(xaxis=dict(tickmode='linear'), dragmode=False)
+        fig_year.update_layout(xaxis=dict(tickmode='linear'), dragmode=False,)
         st.plotly_chart(fig_year)
 
     elif option == "Accidents per Month (per Year)":
@@ -559,7 +518,8 @@ elif page == "GMA":
         st.plotly_chart(fig_month)
 
     elif option == "Monthly Accidents (All Years)":
-    
+
+        st.subheader("Total Accidents Per Month (2020–2024) in GMA")
         monthly_all_years = (
         df.groupby(['Month', 'Month_Num'])
         .size()
@@ -570,38 +530,16 @@ elif page == "GMA":
         fig = px.bar(
         monthly_all_years,
         x='Month',
-        y='Total Accidents',
-        title='Total Accidents Per Month (2020–2024)'
+        y='Total Accidents'
         )
         st.plotly_chart(fig)
-
+        
+        
 elif page == "Carmona":
     st.subheader("Carmona Analysis")
-
+    st.image("data/qgis_maps/Carmona/carmona heatmap.png", caption="Carmona heatmap")
     df = pd.read_csv("data/Carmona/CARMONA 2020 - 2024.csv")
 
-    
-
-    # Count the number of accidents per year using the 'year' column directly
-    yearly_counts = df['Year'].value_counts().sort_index()
-
-# Convert to DataFrame for display or plotting
-    yearly_df = yearly_counts.reset_index()
-    yearly_df.columns = ['Year', 'Total Accidents']
-
-# Plot using Plotly
-    fig = px.line(
-      yearly_df,
-     x='Year',
-     y='Total Accidents',
-     title='Total Road Accidents per Year in Carmona',
-      markers=True
-)
-
-    fig.update_layout(xaxis=dict(tickmode='linear'), dragmode=False)
-
-# Show in Streamlit
-    st.plotly_chart(fig)
 
     df = pd.read_csv("data/Carmona/CARMONA 2020 - 2024.csv")
 
@@ -637,7 +575,7 @@ elif page == "Carmona":
     df['Month_Num'] = df['Date'].dt.month  # Useful for chronological sorting
     
 
-# Now you can sort by year and month
+#  Now you can sort by year and month
     df = df.sort_values(['Year', 'Month_Num'])
 
 
@@ -645,16 +583,19 @@ elif page == "Carmona":
     option = st.radio("Select View", ["Accidents Per Year", "Monthly Breakdown by Year", "Monthly Accidents (All Years)"])
 
     if option == "Accidents Per Year":
+
+        st.subheader("Total Accidents Per Year in Carmona")
         yearly_counts = df['Year'].value_counts().sort_index()
         yearly_df = yearly_counts.reset_index()
         yearly_df.columns = ['Year', 'Total Accidents']
 
         fig = px.line(yearly_df, x='Year', y='Total Accidents',
                       title='Total Road Accidents Per Year', markers=True)
-        fig.update_layout(xaxis=dict(tickmode='linear'), dragmode=False)
+        fig.update_layout(xaxis=dict(tickmode='linear'), dragmode=False,)
         st.plotly_chart(fig)
 
     elif option == "Monthly Breakdown by Year":
+        st.subheader("Total Accidents Per Month in Carmona")
         # Let user select a year
         selected_year = st.selectbox("Select Year", sorted(df['Year'].unique()))
         filtered_df = df[df['Year'] == selected_year]
@@ -684,7 +625,7 @@ elif page == "Carmona":
             markers=True,
             title='Total Road Accidents per Year'
         )
-        fig_year.update_layout(xaxis=dict(tickmode='linear'))
+        fig_year.update_layout(xaxis=dict(tickmode='linear'), dragmode=False,)
         st.plotly_chart(fig_year)
 
     elif option == "Accidents per Month (per Year)":
@@ -707,9 +648,10 @@ elif page == "Carmona":
             title=f'Total Road Accidents per Month in {selected_year}'
         )
         st.plotly_chart(fig_month)
-        
+
     elif option == "Monthly Accidents (All Years)":
-    
+
+        st.subheader("Total Accidents Per Month (2020–2024) in Carmona")
         monthly_all_years = (
         df.groupby(['Month', 'Month_Num'])
         .size()
@@ -720,11 +662,9 @@ elif page == "Carmona":
         fig = px.bar(
         monthly_all_years,
         x='Month',
-        y='Total Accidents',
-        title='Total Accidents Per Month (2020–2024)'
+        y='Total Accidents'
         )
         st.plotly_chart(fig)
-
 
             
             
